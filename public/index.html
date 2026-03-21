@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart POS - Professional</title>
+    <title>POSweb by Rsby - Professional POS System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -14,8 +14,8 @@
 
     <div id="pageLogin" class="flex items-center justify-center min-h-screen bg-slate-900 p-4 relative z-[100]">
         <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md text-center">
-            <h1 class="text-3xl font-extrabold tracking-tight mb-2">POS Login</h1>
-            <p class="text-slate-500 mb-6 text-sm font-semibold">Silakan masuk ke sistem kasir</p>
+            <h1 class="text-3xl font-extrabold tracking-tight mb-2">POSweb <span class="text-blue-600">Login</span></h1>
+            <p class="text-slate-500 mb-6 text-sm font-semibold">Selamat datang di POSweb by Rsby</p>
             <input type="text" id="inputUser" placeholder="Username" class="w-full p-3 mb-3 rounded-xl border outline-none focus:ring-2 focus:ring-blue-500 font-bold text-center">
             <input type="password" id="inputPass" placeholder="Password" class="w-full p-3 mb-5 rounded-xl border outline-none focus:ring-2 focus:ring-blue-500 font-bold text-center" onkeypress="if(event.key==='Enter') login()">
             <button onclick="login()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 shadow-lg active:scale-95 transition">MASUK SEKARANG</button>
@@ -34,8 +34,8 @@
                     </button>
 
                     <div class="flex flex-col">
-                        <h1 id="headerNamaToko" class="text-lg md:text-xl font-black text-blue-600 tracking-tighter uppercase leading-none truncate">POS SYSTEM</h1>
-                        <span id="headerAlamatTelp" class="text-[9px] text-slate-400 font-bold mt-1 uppercase tracking-widest leading-tight truncate max-w-[150px] md:max-w-none">Alamat & Telp Toko</span>
+                        <h1 id="headerNamaToko" class="text-lg md:text-xl font-black text-blue-600 tracking-tighter uppercase leading-none truncate">POSweb by Rsby</h1>
+                        <span id="headerAlamatTelp" class="text-[9px] text-slate-400 font-bold mt-1 uppercase tracking-widest leading-tight truncate max-w-[150px] md:max-w-none">Premium Point of Sale System</span>
                     </div>
                     
                     <span id="userInfo" class="bg-blue-50 text-blue-600 border border-blue-200 px-2 py-1 rounded text-[10px] font-bold uppercase h-fit shrink-0 ml-auto md:ml-2">USER</span>
@@ -44,21 +44,21 @@
                 <nav id="mainNav" class="fixed inset-y-0 left-0 w-64 bg-white shadow-2xl z-[80] transform -translate-x-full transition-transform duration-300 flex flex-col p-5 gap-2 overflow-y-auto md:static md:w-auto md:bg-transparent md:shadow-none md:transform-none md:flex-row md:items-center md:p-0 md:flex md:overflow-visible">
                     
                     <div class="flex justify-between items-center mb-6 md:hidden pb-4 border-b border-slate-100">
-                        <span class="font-black text-blue-600 text-lg">MENU UTAMA</span>
+                        <span class="font-black text-blue-600 text-lg">POSweb Menu</span>
                         <button onclick="toggleSidebar(true)" class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 active:scale-95 cursor-pointer">
                             <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
                     </div>
 
                     <button id="btnNavDashboard" onclick="showTab('dashboard')" class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Dashboard</button>
-                    <button id="btnNavKasir" onclick="showTab('kasir')" class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Penjualan</button>
+                    <button id="btnNavKasir" onclick="showTab('kasir')" class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Kasir</button>
                     <button id="btnNavGudang" onclick="showTab('gudang')" class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Gudang</button>
                     <button id="btnNavLaporan" onclick="showTab('laporan')" class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Laporan</button>
                     <button id="btnNavPengguna" onclick="showTab('pengguna')" class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">User</button>
                     <button id="btnNavSetting" onclick="showTab('setting')" class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Setting</button>
                     
                     <div class="mt-auto md:hidden pt-4 border-t border-slate-100 w-full"></div>
-                    <button onclick="logout()" class="px-4 py-3 md:py-1.5 bg-red-50 text-red-600 rounded-lg font-bold text-sm md:text-xs shrink-0 md:ml-auto hover:bg-red-100 transition uppercase text-left md:text-center w-full md:w-auto cursor-pointer">Logout Sistem</button>
+                    <button onclick="logout()" class="px-4 py-3 md:py-1.5 bg-red-50 text-red-600 rounded-lg font-bold text-sm md:text-xs shrink-0 md:ml-auto hover:bg-red-100 transition uppercase text-left md:text-center w-full md:w-auto cursor-pointer">Keluar</button>
                 </nav>
             </div>
         </header>
@@ -265,7 +265,7 @@
         </main>
     </div>
 
-    <div id="modalAlert" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[70] p-4 backdrop-blur-sm transition-opacity no-print opacity-0">
+    <div id="modalAlert" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[999] p-4 backdrop-blur-sm transition-opacity no-print opacity-0">
         <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-xs text-center transform scale-100">
             <div id="iconAlert" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"></div>
             <h3 id="titleAlert" class="font-black text-xl mb-2 text-slate-800">Alert</h3>
@@ -274,7 +274,7 @@
         </div>
     </div>
 
-    <div id="modalConfirm" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[70] p-4 backdrop-blur-sm transition-opacity no-print opacity-0">
+    <div id="modalConfirm" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[999] p-4 backdrop-blur-sm transition-opacity no-print opacity-0">
         <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm text-center transform scale-100">
             <div class="w-16 h-16 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
@@ -288,7 +288,7 @@
         </div>
     </div>
 
-    <div id="modalSuksesBayar" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[60] p-4 backdrop-blur-sm no-print">
+    <div id="modalSuksesBayar" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[999] p-4 backdrop-blur-sm no-print">
         <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-xs text-center">
             <div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-3"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></div>
             <h3 class="font-black text-xl mb-1">Transaksi Berhasil!</h3>
@@ -301,7 +301,7 @@
         </div>
     </div>
     
-    <div id="modalStrukLaporan" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-50 p-4 backdrop-blur-sm no-print">
+    <div id="modalStrukLaporan" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[999] p-4 backdrop-blur-sm no-print">
         <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm relative">
             <h3 class="font-black text-lg text-center mb-4 uppercase tracking-wider text-slate-800">Detail & Retur</h3>
             <div id="isiModalStruk" class="bg-slate-50 p-4 rounded-xl border border-slate-200 font-mono text-[10px] leading-relaxed max-h-[50vh] overflow-y-auto mb-4 text-slate-700"></div>
