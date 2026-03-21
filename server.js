@@ -8,12 +8,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Lokasi file konfigurasi
 const configPath = path.join(__dirname, 'config.json');
 let db; 
 let isSystemReady = false; 
 
-// ================= MIDDLEWARE (SISTEM PENJAGA PINTU URL) =================
 app.use((req, res, next) => {
     if (req.path === '/api/setup' || (req.path.includes('.') && !req.path.endsWith('.html'))) {
         return next();
@@ -30,7 +28,6 @@ app.use((req, res, next) => {
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ================= FUNGSI INISIALISASI DATABASE =================
 async function initSystem() {
     try {
         if (!fs.existsSync(configPath)) { isSystemReady = false; return; }
@@ -50,14 +47,12 @@ async function initSystem() {
 
         const promiseDb = db.promise();
 
-        // Bikin Tabel (Berurutan biar gak crash)
         await promiseDb.query(`CREATE TABLE IF NOT EXISTS produk (id INT AUTO_INCREMENT PRIMARY KEY, barcode VARCHAR(50) UNIQUE, nama VARCHAR(100), harga_jual DECIMAL(10,2), stok INT, harga_beli DECIMAL(10,2) DEFAULT 0, kategori VARCHAR(50) DEFAULT '-', satuan VARCHAR(20) DEFAULT 'pcs')`);
         await promiseDb.query(`CREATE TABLE IF NOT EXISTS transaksi (id INT AUTO_INCREMENT PRIMARY KEY, no_struk VARCHAR(50) UNIQUE, tanggal TIMESTAMP DEFAULT CURRENT_TIMESTAMP, total_bayar DECIMAL(10,2), total_modal DECIMAL(10,2) DEFAULT 0, kasir VARCHAR(50) DEFAULT 'Admin', metode_bayar VARCHAR(20) DEFAULT 'Tunai')`);
         await promiseDb.query(`CREATE TABLE IF NOT EXISTS detail_transaksi (id INT AUTO_INCREMENT PRIMARY KEY, id_transaksi INT, barcode VARCHAR(50), nama_barang VARCHAR(100), harga DECIMAL(10,2), qty INT, subtotal DECIMAL(10,2))`);
         await promiseDb.query(`CREATE TABLE IF NOT EXISTS pengaturan (id INT PRIMARY KEY DEFAULT 1, nama_toko VARCHAR(100), alamat_toko TEXT, telp_toko VARCHAR(20))`);
         await promiseDb.query(`CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(50) UNIQUE, password VARCHAR(255), role VARCHAR(255))`);
 
-        // Update Kolom kalau di DB lama belum ada
         const alters = [
             `ALTER TABLE transaksi ADD COLUMN total_modal DECIMAL(10,2) DEFAULT 0 AFTER total_bayar`,
             `ALTER TABLE transaksi ADD COLUMN kasir VARCHAR(50) DEFAULT 'Admin' AFTER total_modal`,
@@ -73,45 +68,37 @@ async function initSystem() {
         console.log(`[POSweb] Sistem POSweb by Rsby siap digunakan.`);
 
     } catch (err) {
-        console.error("[SYSTEM ERROR] Gagal inisialisasi / Config Corrupt:", err.message);
+        console.error("[POSweb ERROR] Gagal inisialisasi / Config Corrupt:", err.message);
         isSystemReady = false; 
     }
 }
 initSystem();
 
-// ================= API SETUP INSTALASI BARU =================
 app.post('/api/setup', (req, res) => {
     if (isSystemReady) return res.status(400).json({ success: false, pesan: 'Sistem sudah terinstal!' });
 
     const { dbHost, dbUser, dbPass, dbName, tokoNama, tokoAlamat, tokoTelp, ownerUser, ownerPass } = req.body;
     
-    // Test koneksi
     const tempDb = mysql.createConnection({ host: dbHost, user: dbUser, password: dbPass });
     tempDb.connect((err) => {
         if (err) return res.status(400).json({ success: false, pesan: 'Koneksi Ditolak! Pastikan Host, User, & Password MySQL benar.' });
         
-        // Buat DB otomatis
         tempDb.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\``, async (err2) => {
             if (err2) { tempDb.end(); return res.status(500).json({ success: false, pesan: 'Gagal membuat database: ' + err2.message }); }
             tempDb.end(); 
             
-            // Simpan config.json
             const configData = { host: dbHost, user: dbUser, password: dbPass, database: dbName };
             fs.writeFileSync(configPath, JSON.stringify(configData, null, 4));
             
-            // Re-inisialisasi buat ngebikin tabel dll
             await initSystem();
 
-            // Masukin data Profil Toko & Owner ke dalam tabel yang barusan dibuat
             try {
                 const promiseDb = db.promise();
                 const roleAll = 'dashboard,kasir,gudang,laporan,pengguna,setting';
                 
-                // Simpan Owner
                 await promiseDb.query(`INSERT INTO users (username, password, role) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE password=?, role=?`, 
                     [ownerUser, ownerPass, roleAll, ownerPass, roleAll]);
                 
-                // Simpan Profil Toko
                 await promiseDb.query(`INSERT INTO pengaturan (id, nama_toko, alamat_toko, telp_toko) VALUES (1, ?, ?, ?) ON DUPLICATE KEY UPDATE nama_toko=?, alamat_toko=?, telp_toko=?`, 
                     [tokoNama, tokoAlamat || '', tokoTelp || '', tokoNama, tokoAlamat || '', tokoTelp || '']);
                 
@@ -123,8 +110,6 @@ app.post('/api/setup', (req, res) => {
         });
     });
 });
-
-// ================= ROUTE API NORMAL APLIKASI POS =================
 
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
