@@ -8,104 +8,135 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Lokasi file konfigurasi
 const configPath = path.join(__dirname, 'config.json');
+let db; 
+let isSystemReady = false; // Status nyawa aplikasi
 
 // ================= MIDDLEWARE (SISTEM PENJAGA PINTU URL) =================
 app.use((req, res, next) => {
-    const isConfigured = fs.existsSync(configPath);
-    
-    // Izinkan API setup dan asset statis (CSS/JS/Gambar), kecuali file HTML
+    // 1. Izinkan akses ke API Setup dan file statis (CSS/JS/Gambar)
     if (req.path === '/api/setup' || (req.path.includes('.') && !req.path.endsWith('.html'))) {
         return next();
     }
 
-    // 1. JIKA SUDAH SETUP (KASIR NORMAL)
-    if (isConfigured) {
-        // Kalau maksa buka folder /setup, tendang balik ke Home (/)
+    // 2. JIKA SUDAH SETUP (KASIR JALAN NORMAL)
+    if (isSystemReady) {
+        // Kalau maksa buka folder /setup, tendang balik ke menu Kasir (/)
         if (req.path.startsWith('/setup')) {
             return res.redirect('/');
         }
-        return next(); // Lanjut jalankan web utama
-    }
-
-    // 2. JIKA BELUM SETUP (MODE INSTALASI)
-    if (!isConfigured) {
-        // Blokir akses API lain biar aman
+        return next(); 
+    } 
+    
+    // 3. JIKA BELUM SETUP (MODE INSTALASI)
+    else {
+        // Blokir semua API kasir biar aman
         if (req.path.startsWith('/api/')) {
             return res.status(403).json({ error: 'Silakan jalankan instalasi terlebih dahulu.' });
         }
-        // Kalau buka selain folder /setup, lempar ke /setup/
+        // Paksa user masuk ke folder setup (http://ip-server/setup/)
         if (!req.path.startsWith('/setup')) {
             return res.redirect('/setup/');
         }
-        return next(); // Lanjut buka halaman setup
+        return next(); 
     }
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ================= GLOBAL DATABASE VARIABLE =================
-let db; 
+// ================= FUNGSI INISIALISASI DATABASE (ANTI-CRASH) =================
+async function initSystem() {
+    try {
+        // Cek apakah file config ada dan isinya tidak kosong
+        if (!fs.existsSync(configPath)) {
+            isSystemReady = false;
+            return;
+        }
+        
+        const rawData = fs.readFileSync(configPath, 'utf8');
+        if (!rawData.trim()) {
+            isSystemReady = false;
+            return;
+        }
 
-function initSystem() {
-    if (!fs.existsSync(configPath)) return; 
-    
-    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    
-    db = mysql.createPool({
-        host: config.host, 
-        user: config.user,         
-        password: config.password,     
-        database: config.database,  
-        waitForConnections: true,
-        connectionLimit: 10,
-        queueLimit: 0
-    });
+        const config = JSON.parse(rawData);
+        
+        db = mysql.createPool({
+            host: config.host, 
+            user: config.user,         
+            password: config.password,     
+            database: config.database,  
+            waitForConnections: true,
+            connectionLimit: 10,
+            queueLimit: 0
+        });
 
-    const queries = [
-        `CREATE TABLE IF NOT EXISTS produk (id INT AUTO_INCREMENT PRIMARY KEY, barcode VARCHAR(50) UNIQUE, nama VARCHAR(100), harga_jual DECIMAL(10,2), stok INT, harga_beli DECIMAL(10,2) DEFAULT 0, kategori VARCHAR(50) DEFAULT '-', satuan VARCHAR(20) DEFAULT 'pcs')`,
-        `CREATE TABLE IF NOT EXISTS transaksi (id INT AUTO_INCREMENT PRIMARY KEY, no_struk VARCHAR(50) UNIQUE, tanggal TIMESTAMP DEFAULT CURRENT_TIMESTAMP, total_bayar DECIMAL(10,2), total_modal DECIMAL(10,2) DEFAULT 0, kasir VARCHAR(50) DEFAULT 'Admin', metode_bayar VARCHAR(20) DEFAULT 'Tunai')`,
-        `CREATE TABLE IF NOT EXISTS detail_transaksi (id INT AUTO_INCREMENT PRIMARY KEY, id_transaksi INT, barcode VARCHAR(50), nama_barang VARCHAR(100), harga DECIMAL(10,2), qty INT, subtotal DECIMAL(10,2))`,
-        `CREATE TABLE IF NOT EXISTS pengaturan (id INT PRIMARY KEY DEFAULT 1, nama_toko VARCHAR(100), alamat_toko TEXT, telp_toko VARCHAR(20))`,
-        `CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(50) UNIQUE, password VARCHAR(255), role VARCHAR(255))`
-    ];
-    queries.forEach(q => db.query(q, () => {}));
+        const promiseDb = db.promise();
 
-    db.query(`ALTER TABLE transaksi ADD COLUMN total_modal DECIMAL(10,2) DEFAULT 0 AFTER total_bayar`, () => {});
-    db.query(`ALTER TABLE transaksi ADD COLUMN kasir VARCHAR(50) DEFAULT 'Admin' AFTER total_modal`, () => {});
-    db.query(`ALTER TABLE transaksi ADD COLUMN metode_bayar VARCHAR(20) DEFAULT 'Tunai' AFTER kasir`, () => {}); 
-    db.query(`ALTER TABLE produk ADD COLUMN harga_beli DECIMAL(10,2) DEFAULT 0 AFTER harga_jual`, () => {});
-    db.query(`ALTER TABLE produk ADD COLUMN kategori VARCHAR(50) DEFAULT '-' AFTER stok`, () => {});
-    db.query(`ALTER TABLE produk ADD COLUMN satuan VARCHAR(20) DEFAULT 'pcs' AFTER kategori`, () => {});
+        // Buat tabel satu per satu biar aman dan tidak crash (Berurutan)
+        await promiseDb.query(`CREATE TABLE IF NOT EXISTS produk (id INT AUTO_INCREMENT PRIMARY KEY, barcode VARCHAR(50) UNIQUE, nama VARCHAR(100), harga_jual DECIMAL(10,2), stok INT, harga_beli DECIMAL(10,2) DEFAULT 0, kategori VARCHAR(50) DEFAULT '-', satuan VARCHAR(20) DEFAULT 'pcs')`);
+        await promiseDb.query(`CREATE TABLE IF NOT EXISTS transaksi (id INT AUTO_INCREMENT PRIMARY KEY, no_struk VARCHAR(50) UNIQUE, tanggal TIMESTAMP DEFAULT CURRENT_TIMESTAMP, total_bayar DECIMAL(10,2), total_modal DECIMAL(10,2) DEFAULT 0, kasir VARCHAR(50) DEFAULT 'Admin', metode_bayar VARCHAR(20) DEFAULT 'Tunai')`);
+        await promiseDb.query(`CREATE TABLE IF NOT EXISTS detail_transaksi (id INT AUTO_INCREMENT PRIMARY KEY, id_transaksi INT, barcode VARCHAR(50), nama_barang VARCHAR(100), harga DECIMAL(10,2), qty INT, subtotal DECIMAL(10,2))`);
+        await promiseDb.query(`CREATE TABLE IF NOT EXISTS pengaturan (id INT PRIMARY KEY DEFAULT 1, nama_toko VARCHAR(100), alamat_toko TEXT, telp_toko VARCHAR(20))`);
+        await promiseDb.query(`CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(50) UNIQUE, password VARCHAR(255), role VARCHAR(255))`);
 
-    console.log(`[SYSTEM] Berhasil terhubung ke database: ${config.database}`);
+        // Bikin akun default otomatis jika belum ada
+        await promiseDb.query(`INSERT IGNORE INTO users (username, password, role) VALUES ('owner', 'owner', 'dashboard,kasir,gudang,laporan,pengguna,setting')`);
+
+        // Update Kolom (Abaikan error jika kolom sudah ada)
+        const alters = [
+            `ALTER TABLE transaksi ADD COLUMN total_modal DECIMAL(10,2) DEFAULT 0 AFTER total_bayar`,
+            `ALTER TABLE transaksi ADD COLUMN kasir VARCHAR(50) DEFAULT 'Admin' AFTER total_modal`,
+            `ALTER TABLE transaksi ADD COLUMN metode_bayar VARCHAR(20) DEFAULT 'Tunai' AFTER kasir`,
+            `ALTER TABLE produk ADD COLUMN harga_beli DECIMAL(10,2) DEFAULT 0 AFTER harga_jual`,
+            `ALTER TABLE produk ADD COLUMN kategori VARCHAR(50) DEFAULT '-' AFTER stok`,
+            `ALTER TABLE produk ADD COLUMN satuan VARCHAR(20) DEFAULT 'pcs' AFTER kategori`
+        ];
+
+        for (let q of alters) {
+            try { await promiseDb.query(q); } catch(e) {} // Silent fail kalau kolom udah ada
+        }
+
+        isSystemReady = true; // Buka gerbang aplikasi
+        console.log(`[SYSTEM] Berhasil terhubung ke database: ${config.database}`);
+
+    } catch (err) {
+        console.error("[SYSTEM ERROR] Gagal inisialisasi / Config Corrupt:", err.message);
+        isSystemReady = false; // Kunci aplikasi kalau error
+    }
 }
 
+// Jalankan pengecekan pertama saat server hidup
 initSystem();
 
 // ================= API SETUP INSTALASI BARU =================
 app.post('/api/setup', (req, res) => {
-    if (fs.existsSync(configPath)) return res.status(400).json({ success: false, pesan: 'Sistem sudah terinstal!' });
+    if (isSystemReady) return res.status(400).json({ success: false, pesan: 'Sistem sudah terinstal!' });
 
     const { dbHost, dbUser, dbPass, dbName } = req.body;
     
+    // Test koneksi ke MySQL Server
     const tempDb = mysql.createConnection({ host: dbHost, user: dbUser, password: dbPass });
     
     tempDb.connect((err) => {
         if (err) return res.status(400).json({ success: false, pesan: 'Koneksi Ditolak! Pastikan Host, User, & Password MySQL benar.' });
         
-        tempDb.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\``, (err2) => {
+        // Buat Database jika belum ada
+        tempDb.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\``, async (err2) => {
             if (err2) {
                 tempDb.end();
                 return res.status(500).json({ success: false, pesan: 'Gagal membuat database: ' + err2.message });
             }
             
-            tempDb.end(); 
+            tempDb.end(); // Tutup koneksi sementara
             
+            // Simpan file config.json
             const configData = { host: dbHost, user: dbUser, password: dbPass, database: dbName };
             fs.writeFileSync(configPath, JSON.stringify(configData, null, 4));
             
-            initSystem();
+            // Re-inisialisasi sistem agar langsung pakai DB baru
+            await initSystem();
             res.json({ success: true, pesan: 'Instalasi Database Berhasil!' });
         });
     });
