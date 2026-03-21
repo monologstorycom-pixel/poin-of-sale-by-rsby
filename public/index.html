@@ -3,19 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>POSweb by Rsby - Professional POS System</title>
+    <title>POSweb by Rsby - Premium POS System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen overflow-hidden flex flex-col relative">
 
     <div id="pageLogin" class="flex items-center justify-center min-h-screen bg-slate-900 p-4 relative z-[100]">
         <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md text-center">
-            <h1 class="text-3xl font-extrabold tracking-tight mb-2">POSweb <span class="text-blue-600">Login</span></h1>
-            <p class="text-slate-500 mb-6 text-sm font-semibold">Selamat datang di POSweb by Rsby</p>
+            <h1 class="text-3xl font-extrabold tracking-tight mb-2">POSweb <span class="text-blue-600">by Rsby</span></h1>
+            <p class="text-slate-500 mb-6 text-sm font-semibold">Selamat datang di sistem kasir POSweb</p>
             <input type="text" id="inputUser" placeholder="Username" class="w-full p-3 mb-3 rounded-xl border outline-none focus:ring-2 focus:ring-blue-500 font-bold text-center">
             <input type="password" id="inputPass" placeholder="Password" class="w-full p-3 mb-5 rounded-xl border outline-none focus:ring-2 focus:ring-blue-500 font-bold text-center" onkeypress="if(event.key==='Enter') login()">
             <button onclick="login()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 shadow-lg active:scale-95 transition">MASUK SEKARANG</button>
@@ -42,7 +41,6 @@
                 </div>
 
                 <nav id="mainNav" class="fixed inset-y-0 left-0 w-64 bg-white shadow-2xl z-[80] transform -translate-x-full transition-transform duration-300 flex flex-col p-5 gap-2 overflow-y-auto md:static md:w-auto md:bg-transparent md:shadow-none md:transform-none md:flex-row md:items-center md:p-0 md:flex md:overflow-visible">
-                    
                     <div class="flex justify-between items-center mb-6 md:hidden pb-4 border-b border-slate-100">
                         <span class="font-black text-blue-600 text-lg">POSweb Menu</span>
                         <button onclick="toggleSidebar(true)" class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 active:scale-95 cursor-pointer">
@@ -58,7 +56,7 @@
                     <button id="btnNavSetting" onclick="showTab('setting')" class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Setting</button>
                     
                     <div class="mt-auto md:hidden pt-4 border-t border-slate-100 w-full"></div>
-                    <button onclick="logout()" class="px-4 py-3 md:py-1.5 bg-red-50 text-red-600 rounded-lg font-bold text-sm md:text-xs shrink-0 md:ml-auto hover:bg-red-100 transition uppercase text-left md:text-center w-full md:w-auto cursor-pointer">Keluar</button>
+                    <button onclick="logout()" class="px-4 py-3 md:py-1.5 bg-red-50 text-red-600 rounded-lg font-bold text-sm md:text-xs shrink-0 md:ml-auto hover:bg-red-100 transition uppercase text-left md:text-center w-full md:w-auto cursor-pointer">Logout</button>
                 </nav>
             </div>
         </header>
