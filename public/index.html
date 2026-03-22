@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <link rel="stylesheet" href="style.css?v=999">
+    <link rel="stylesheet" href="style.css?v=1000">
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen overflow-hidden flex flex-col relative">
 
@@ -274,6 +274,51 @@
         </div>
     </div>
 
-    <script src="app.js?v=999"></script>
+    <div id="modalConfirm" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[999] p-4 backdrop-blur-sm transition-opacity no-print opacity-0">
+        <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm text-center transform scale-100">
+            <div class="w-16 h-16 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div>
+            <h3 id="titleConfirm" class="font-black text-xl mb-2 text-slate-800">Konfirmasi</h3>
+            <p id="msgConfirm" class="text-sm text-slate-500 mb-6 font-medium leading-tight">Message here</p>
+            <div class="flex gap-2"><button onclick="closeConfirm()" class="w-1/2 bg-slate-100 text-slate-700 font-bold py-3 rounded-xl hover:bg-slate-200 transition text-sm">Batal</button><button id="btnConfirmOk" class="w-1/2 bg-orange-500 text-white font-bold py-3 rounded-xl hover:bg-orange-600 transition shadow-lg shadow-orange-200 text-sm">Ya, Lanjutkan</button></div>
+        </div>
+    </div>
+
+    <div id="modalSuksesBayar" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[999] p-4 backdrop-blur-sm no-print">
+        <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-xs text-center">
+            <div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-3"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></div>
+            <h3 class="font-black text-xl mb-1">Transaksi Berhasil!</h3>
+            <p class="text-xs text-slate-500 mb-5 font-bold">Kembali: <span id="modalKembalian" class="font-black text-green-600 text-base">Rp0</span></p>
+            <div class="space-y-2">
+                <button onclick="cetakStrukKasir()" class="w-full bg-slate-100 text-slate-700 font-bold py-3.5 rounded-xl text-sm hover:bg-slate-200 transition active:scale-95">🖨️ Cetak Struk</button>
+                <button onclick="kirimWA()" class="w-full bg-green-500 text-white font-bold py-3.5 rounded-xl text-sm hover:bg-green-600 transition shadow-md shadow-green-200 active:scale-95">💬 Kirim ke WhatsApp</button>
+                <button onclick="selesaiBayar()" class="w-full bg-blue-600 text-white font-black py-3.5 rounded-xl text-sm hover:bg-blue-700 transition mt-2 shadow-md shadow-blue-200 active:scale-95">✅ Selesai</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="modalStrukLaporan" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[999] p-4 backdrop-blur-sm no-print">
+        <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm relative">
+            <h3 class="font-black text-lg text-center mb-4 uppercase tracking-wider text-slate-800">Detail & Retur</h3>
+            <div id="isiModalStruk" class="bg-slate-50 p-4 rounded-xl border border-slate-200 font-mono text-[10px] leading-relaxed max-h-[50vh] overflow-y-auto mb-4 text-slate-700"></div>
+            <div class="flex flex-col gap-2"></div>
+        </div>
+    </div>
+
+    <div id="areaStruk" class="hidden max-w-[58mm] mx-auto text-[10px] font-mono p-1 text-black bg-white leading-tight">
+        <center><b id="strukNamaTokoPrint" class="text-[13px] uppercase"></b><br><span id="strukAlamatTelpPrint" class="text-[9px]"></span><hr class="border-dashed border-black my-1"></center>
+        <div id="strukTanggal" class="text-center text-[9px] mb-1"></div>
+        <div id="strukNomor" class="text-center font-bold mb-2 pb-1 border-b border-dashed border-black"></div>
+        <table class="w-full mb-2"><tbody id="strukItem"></tbody></table>
+        <div class="border-t border-dashed border-black pt-2 font-bold space-y-1">
+            <div class="flex justify-between"><span>TOTAL</span><span id="strukTotalPrint"></span></div>
+            <div class="flex justify-between"><span>METODE</span><span id="strukMetodePrint"></span></div>
+            <div id="areaStrukTunai" class="flex justify-between"><span>TUNAI</span><span id="strukTunaiPrint"></span></div>
+            <div id="areaStrukKembali" class="flex justify-between"><span>KEMBALI</span><span id="strukKembaliPrint"></span></div>
+        </div>
+        <center class="mt-4 pt-2 border-t border-dashed border-black italic text-[9px]">Kasir: <span id="strukNamaKasir"></span><br><span id="strukFooterText">Terima Kasih</span></center>
+    </div>
+    <div id="areaPrintLaporan" class="hidden bg-white p-4"></div>
+
+    <script src="app.js?v=1000"></script>
 </body>
 </html>
