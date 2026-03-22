@@ -488,7 +488,16 @@ async function prosesBayar() {
         document.getElementById('strukTanggal').innerText   = new Date().toLocaleString('id-ID');
         document.getElementById('strukNomor').innerText     = no;
         document.getElementById('strukNamaKasir').innerText = kasir.toUpperCase();
-        document.getElementById('strukItem').innerHTML = keranjang.map(i => `<tr><td class="pb-1">${safeStr(i.nama)}</td><td align="right" class="pb-1 font-bold">${i.qty}</td></tr>`).join('');
+        document.getElementById('strukItem').innerHTML = keranjang.map(i => `
+            <tr>
+              <td class="pb-0.5" colspan="2">
+                <span class="font-bold">${safeStr(i.nama)}</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="pb-1.5 text-[9px] pl-1 text-slate-500">${i.qty} x ${formatRupiah(i.harga_jual)}</td>
+              <td class="pb-1.5 text-right font-bold">${formatRupiah(i.subtotal)}</td>
+            </tr>`).join('');
         document.getElementById('strukTotalPrint').innerText  = formatRupiah(total);
         document.getElementById('strukMetodePrint').innerText = metodeBayarActive.toUpperCase();
         const isTunai = metodeBayarActive === 'Tunai';
@@ -937,16 +946,16 @@ function renderTabRetur(data) {
     listEl.innerHTML = data.map(t => {
         const tb = parseFloat(t.total_bayar) || 0;
 
-        // Tombol Reprint
+        // Tombol Reprint — langsung load detail lalu cetak, tanpa buka modal
         const btnReprint = canReprint ? `
-          <button onclick="lihatDetailStruk('${t.id}','${t.no_struk}','${t.tanggal}',${tb},'${safeStr(t.kasir)||'Admin'}','${t.metode_bayar||'TUNAI'}')"
+          <button onclick="langungReprint('${t.id}','${t.no_struk}','${t.tanggal}',${tb},'${safeStr(t.kasir)||'Admin'}','${t.metode_bayar||'TUNAI'}')"
             class="bg-blue-500 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-blue-600 active:scale-95 transition">
             🖨️ Reprint
           </button>` : '';
 
-        // Tombol Retur
+        // Tombol Retur — langsung eksekusi retur, tanpa buka modal
         const btnRetur = canRetur ? `
-          <button onclick="lihatDetailStruk('${t.id}','${t.no_struk}','${t.tanggal}',${tb},'${safeStr(t.kasir)||'Admin'}','${t.metode_bayar||'TUNAI'}')"
+          <button onclick="langsungRetur('${t.id}','${t.no_struk}','${t.tanggal}',${tb},'${safeStr(t.kasir)||'Admin'}','${t.metode_bayar||'TUNAI'}')"
             class="bg-orange-500 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-orange-600 active:scale-95 transition">
             ↩ Retur
           </button>` : '';
@@ -968,13 +977,81 @@ function renderTabRetur(data) {
     }).join('');
 }
 
+// Reprint langsung — fetch detail lalu cetak tanpa buka modal audit
+async function langungReprint(id, no, tgl, tot, kas, metode) {
+    try {
+        const res = await fetch('/api/transaksi/detail/' + id);
+        const d   = await res.json();
+        cetakUlangStruk({ no, tanggal: new Date(tgl).toLocaleString('id-ID'), kasir: kas, metode, total: tot, items: d });
+    } catch {
+        showAlert('Error', 'Gagal memuat data struk.', 'error');
+    }
+}
+
+// Retur langsung — langsung confirm & eksekusi tanpa buka modal audit
+async function langsungRetur(id, no, tgl, tot, kas, metode) {
+    try {
+        const res = await fetch('/api/transaksi/detail/' + id);
+        const d   = await res.json();
+        // Simpan ke memoriRevisi seperti biasa, lalu langsung panggil confirm
+        memoriRevisi = { id, no, tanggal: tgl, total: tot, kasir: kas, metode, items: d };
+        showConfirm(
+            'Retur Transaksi?',
+            `Struk ${no} akan di-void. Item-itemnya otomatis masuk ke keranjang kasir.`,
+            async () => {
+                try {
+                    const delRes = await fetch('/api/transaksi/' + id, { method: 'DELETE' });
+                    if (!delRes.ok) throw new Error('Gagal void transaksi');
+                    await loadKatalogKasir();
+                    keranjang = []; total = 0; totalModal = 0;
+                    memoriRevisi.items.forEach(item => {
+                        const katalogItem = dataKatalog.find(k => k.barcode === item.barcode);
+                        const qty = parseInt(item.qty) || 1;
+                        if (katalogItem) {
+                            keranjang.push({
+                                barcode: katalogItem.barcode, nama: katalogItem.nama,
+                                harga_jual: parseFloat(katalogItem.harga_jual),
+                                harga_beli: parseFloat(katalogItem.harga_beli || 0),
+                                stok: parseInt(katalogItem.stok) + qty,
+                                satuan: katalogItem.satuan || 'pcs', kategori: katalogItem.kategori || '-',
+                                qty, subtotal: qty * parseFloat(katalogItem.harga_jual),
+                            });
+                        } else {
+                            keranjang.push({
+                                barcode: item.barcode, nama: item.nama_barang,
+                                harga_jual: parseFloat(item.harga), harga_beli: 0,
+                                stok: qty, satuan: 'pcs', kategori: '-',
+                                qty, subtotal: qty * parseFloat(item.harga),
+                            });
+                        }
+                    });
+                    loadDataLaporan();
+                    showTab('kasir');
+                    renderKeranjang();
+                    showAlert('Retur Berhasil', `${keranjang.length} item dari struk ${no} sudah masuk ke keranjang.`, 'success');
+                } catch (e) {
+                    showAlert('Gagal', e.message || 'Terjadi kesalahan saat retur.', 'error');
+                }
+            }
+        );
+    } catch {
+        showAlert('Error', 'Gagal memuat data transaksi.', 'error');
+    }
+}
 function cetakUlangStruk(data) {
     document.getElementById('strukTanggal').innerText    = data.tanggal;
     document.getElementById('strukNomor').innerText      = data.no + ' (REPRINT)';
     document.getElementById('strukNamaKasir').innerText  = data.kasir.toUpperCase();
-    document.getElementById('strukItem').innerHTML = data.items.map(i =>
-        `<tr><td class="pb-1">${safeStr(i.nama_barang)}</td><td align="right" class="pb-1 font-bold">${i.qty}</td></tr>`
-    ).join('');
+    document.getElementById('strukItem').innerHTML = data.items.map(i => `
+        <tr>
+          <td class="pb-0.5" colspan="2">
+            <span class="font-bold">${safeStr(i.nama_barang)}</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="pb-1.5 text-[9px] pl-1 text-slate-500">${i.qty} x ${formatRupiah(i.harga)}</td>
+          <td class="pb-1.5 text-right font-bold">${formatRupiah(i.subtotal)}</td>
+        </tr>`).join('');
     document.getElementById('strukTotalPrint').innerText  = formatRupiah(data.total);
     document.getElementById('strukMetodePrint').innerText = data.metode.toUpperCase();
     const isTunai = data.metode.toUpperCase() !== 'QRIS';
