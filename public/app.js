@@ -184,6 +184,16 @@ function checkAuth() {
                 }
             });
 
+            // Tampilkan/sembunyikan section Manajemen Akun di Setting
+            const secAkun = document.getElementById('sectionManajemenAkun');
+            if (secAkun) {
+                if (isSuperAdmin || currentPermissions.includes('pengguna')) {
+                    secAkun.style.removeProperty('display');
+                } else {
+                    secAkun.style.setProperty('display', 'none', 'important');
+                }
+            }
+
             if (currentPermissions.includes('dashboard')) showTab('dashboard');
             else showTab('kasir');
             loadPengaturan();
@@ -239,8 +249,9 @@ function showTab(t) {
     if (t === 'laporan')   loadDataLaporan();
     if (t === 'kasir')     loadKatalogKasir();
     if (t === 'retur')     loadTabRetur();
-    if (t === 'pengguna')  loadUsers();
+    if (t === 'pengguna')  { showTab('setting'); return; }
     if (t === 'pelanggan') loadPelangganWA();
+    if (t === 'setting')   { loadUsers(); }
     toggleSidebar(true);
 }
 
@@ -1247,6 +1258,7 @@ function eksporPelangganWA() {
     a.href = url; a.download = 'pelanggan_wa_' + new Date().toISOString().split('T')[0] + '.csv';
     a.click(); URL.revokeObjectURL(url);
 }
+
 
 // ─── INIT ─────────────────────────────────────────────────────
 // FIX #1: semua DOM listener dipasang di sini, setelah DOM siap — tidak lagi di root scope
