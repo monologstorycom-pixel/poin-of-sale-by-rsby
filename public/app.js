@@ -161,9 +161,10 @@ function checkAuth() {
             const userInfoEl = document.getElementById('userInfo');
             if (userInfoEl) userInfoEl.innerText = name.toUpperCase();
 
-            const all = ['dashboard','kasir','gudang','laporan','retur','pengguna','setting','reprint'];
-            if (name === 'owner' || role === 'owner' || role === 'admin' || role.includes('dashboard')) {
-                currentPermissions = [...all];
+            const all = ['dashboard','kasir','gudang','laporan','retur','pengguna','setting','reprint','pelanggan'];
+            const isSuperAdmin = name === 'owner' || role === 'owner' || role === 'admin' || role.includes('dashboard') || role.includes('pengguna');
+            if (isSuperAdmin) {
+                currentPermissions = [...all]; // sudah include 'pelanggan' dari all[]
             } else if (typeof role === 'string' && role.trim() !== '') {
                 currentPermissions = role.split(',').filter(Boolean);
             } else {
@@ -239,6 +240,7 @@ function showTab(t) {
     if (t === 'kasir')     loadKatalogKasir();
     if (t === 'retur')     loadTabRetur();
     if (t === 'pengguna')  loadUsers();
+    if (t === 'pelanggan') loadPelangganWA();
     toggleSidebar(true);
 }
 
@@ -1138,7 +1140,115 @@ async function hapusUser(id, name) {
     });
 }
 
-// ─── INIT ─────────────────────────────────────────────────
+// ─── PELANGGAN WA ──────────────────────────────────────────
+var dataPelangganWA = [];
+
+async function loadPelangganWA() {
+    try {
+        const res  = await fetch('/api/pelanggan-wa');
+        const data = await res.json();
+        dataPelangganWA = Array.isArray(data) ? data : [];
+
+        // Hitung summary: total pelanggan unik + total transaksi WA + total omzet
+        const nomorUnik = new Set(dataPelangganWA.map(t => t.wa_pelanggan)).size;
+        const totalTrx  = dataPelangganWA.length;
+        const totalOmzet = dataPelangganWA.reduce((s, t) => s + parseFloat(t.total_bayar || 0), 0);
+
+        filterPelangganWA();
+    } catch(e) {
+        console.error(e);
+        document.getElementById('listPelangganWA').innerHTML = '<tr><td colspan="4" class="p-6 text-center text-red-400 italic font-bold">Gagal memuat data.</td></tr>';
+    }
+}
+
+function filterPelangganWA() {
+    const kw = (document.getElementById('cariPelangganWA')?.value || '').toLowerCase();
+    const filtered = dataPelangganWA.filter(t =>
+        (t.wa_pelanggan || '').includes(kw) ||
+        (t.no_struk     || '').toLowerCase().includes(kw) ||
+        (t.kasir        || '').toLowerCase().includes(kw)
+    );
+    renderPelangganWA(filtered);
+}
+
+function renderPelangganWA(data) {
+    const el = document.getElementById('listPelangganWA');
+    if (!el) return;
+    if (!data.length) {
+        el.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-400 italic font-bold">Tidak ada data.</td></tr>';
+        return;
+    }
+
+    // Group by nomor WA — tampilkan per nomor unik, struk terakhir & total belanja
+    const grouped = {};
+    data.forEach(t => {
+        const no = t.wa_pelanggan;
+        if (!grouped[no]) grouped[no] = { wa: no, transaksi: [], total: 0 };
+        grouped[no].transaksi.push(t);
+        grouped[no].total += parseFloat(t.total_bayar || 0);
+    });
+
+    el.innerHTML = Object.values(grouped).map(p => {
+        // Urutkan transaksi terbaru di atas
+        p.transaksi.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+        const latest  = p.transaksi[0];
+        const jumlah  = p.transaksi.length;
+        // Format nomor: 628xxx → 08xxx untuk tampilan
+        const display = p.wa.startsWith('62') ? '0' + p.wa.slice(2) : p.wa;
+        const waLink  = `https://wa.me/${p.wa}`;
+
+        return `<tr class="border-b hover:bg-slate-50 transition">
+          <td class="p-4">
+            <div class="font-black text-slate-800 text-sm">${display}</div>
+            <div class="text-[9px] text-slate-400 mt-0.5">${jumlah} transaksi</div>
+          </td>
+          <td class="p-4">
+            <div class="font-bold text-blue-600 font-mono text-[10px]">${safeStr(latest.no_struk)}</div>
+            <div class="text-[9px] text-slate-400 mt-0.5">${new Date(latest.tanggal).toLocaleString('id-ID')}</div>
+            <div class="text-[8px] bg-slate-100 text-slate-500 inline-block px-1.5 py-0.5 rounded border mt-1 uppercase font-bold">
+              Kasir: ${safeStr(latest.kasir)||'Admin'}
+            </div>
+          </td>
+          <td class="p-4 text-right font-black text-slate-800 text-xs">${formatRupiah(p.total)}</td>
+          <td class="p-4 text-center">
+            <a href="${waLink}" target="_blank"
+              class="inline-block bg-green-500 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-green-600 active:scale-95 transition">
+              💬 Chat WA
+            </a>
+          </td>
+        </tr>`;
+    }).join('');
+}
+
+// Ekspor daftar pelanggan WA ke CSV
+function eksporPelangganWA() {
+    if (!dataPelangganWA.length) return showAlert('Kosong', 'Tidak ada data untuk diekspor.', 'error');
+
+    // Group by nomor WA
+    const grouped = {};
+    dataPelangganWA.forEach(t => {
+        const no = t.wa_pelanggan;
+        if (!grouped[no]) grouped[no] = { wa: no, transaksi: [], total: 0 };
+        grouped[no].transaksi.push(t);
+        grouped[no].total += parseFloat(t.total_bayar || 0);
+    });
+
+    let csv = 'No WA,Jumlah Transaksi,Total Belanja,Struk Terakhir,Tanggal Terakhir\n';
+    Object.values(grouped).forEach(p => {
+        p.transaksi.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+        const latest  = p.transaksi[0];
+        const display = p.wa.startsWith('62') ? '0' + p.wa.slice(2) : p.wa;
+        csv += `${display},${p.transaksi.length},${p.total},${latest.no_struk},${new Date(latest.tanggal).toLocaleString('id-ID')}\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = 'pelanggan_wa_' + new Date().toISOString().split('T')[0] + '.csv';
+    a.click(); URL.revokeObjectURL(url);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────
 // FIX #1: semua DOM listener dipasang di sini, setelah DOM siap — tidak lagi di root scope
 // FIX #5: closeConfirm() DULU baru callback — supaya modal tidak overlap
 window.onload = function () {
