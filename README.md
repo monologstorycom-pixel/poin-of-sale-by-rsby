@@ -32,7 +32,7 @@
 
 **1. Clone repositori**
 ```bash
-git clone https://github.com/username/posweb-rsby.git
+git clone https://github.com/monologstorycom-pixel/posweb-rsby.git
 cd posweb-rsby
 ```
 
