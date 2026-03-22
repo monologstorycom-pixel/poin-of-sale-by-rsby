@@ -53,6 +53,7 @@
                     <button id="btnNavPengguna"  onclick="showTab('pengguna')"  class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">User</button>
                     <button id="btnNavSetting"   onclick="showTab('setting')"   class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Setting</button>
                     <div class="mt-auto md:hidden pt-4 border-t border-slate-100 w-full"></div>
+                    <button id="btnNavPelanggan" onclick="showTab('pelanggan')" class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">📋 Pelanggan WA</button>
                     <button onclick="logout()" class="px-4 py-3 md:py-1.5 bg-red-50 text-red-600 rounded-lg font-bold text-sm md:text-xs shrink-0 md:ml-auto hover:bg-red-100 transition uppercase text-left md:text-center w-full md:w-auto cursor-pointer">Logout</button>
                 </nav>
             </div>
@@ -264,6 +265,41 @@
                             <thead class="bg-slate-50 border-b font-black text-slate-400 text-[10px] uppercase tracking-widest"><tr><th class="p-4">Username</th><th class="p-4">Akses</th><th class="p-4 text-center">Tindakan</th></tr></thead>
                             <tbody id="listPengguna" class="divide-y divide-slate-100"></tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- PELANGGAN WA -->
+                <div id="tabPelanggan" class="tab-content hidden h-full overflow-y-auto custom-scroll space-y-4 pb-10">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 flex-wrap">
+                        <h2 class="font-black text-xl tracking-tight text-slate-800">📋 Daftar Pelanggan WA</h2>
+                        <div class="flex gap-2 items-center flex-wrap">
+                            <input type="text" id="cariPelangganWA" placeholder="Cari nama / nomor WA..."
+                                class="border rounded-lg px-3 py-2 text-xs font-bold outline-none shadow-sm focus:ring-2 focus:ring-green-400 w-56"
+                                oninput="filterPelangganWA()">
+                            <button onclick="eksporPelangganWA()"
+                                class="bg-green-500 text-white font-bold px-4 py-2 rounded-lg text-xs hover:bg-green-600 transition shadow-sm uppercase">
+                                📥 Ekspor CSV
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tabel -->
+                    <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto custom-scroll">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-50 border-b font-black text-slate-400 text-[10px] uppercase tracking-widest sticky top-0">
+                                    <tr>
+                                        <th class="p-4">Pelanggan / No WA</th>
+                                        <th class="p-4">Struk Terakhir</th>
+                                        <th class="p-4 text-right">Total Belanja</th>
+                                        <th class="p-4 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="listPelangganWA" class="divide-y divide-slate-100">
+                                    <tr><td colspan="4" class="p-6 text-center text-slate-400 italic font-bold">Memuat...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
