@@ -50,7 +50,6 @@
                     <button id="btnNavGudang"    onclick="showTab('gudang')"    class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Gudang</button>
                     <button id="btnNavLaporan"   onclick="showTab('laporan')"   class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Laporan</button>
                     <button id="btnNavRetur"     onclick="showTab('retur')"     class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">↩ Retur</button>
-                    <button id="btnNavPengguna"  onclick="showTab('pengguna')"  class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">User</button>
                     <button id="btnNavSetting"   onclick="showTab('setting')"   class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Setting</button>
                     <div class="mt-auto md:hidden pt-4 border-t border-slate-100 w-full"></div>
                     <button id="btnNavPelanggan" onclick="showTab('pelanggan')" class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">📋 Pelanggan WA</button>
@@ -234,39 +233,6 @@
                     </div>
                 </div>
 
-                <!-- PENGGUNA -->
-                <div id="tabPengguna" class="tab-content hidden h-full overflow-y-auto custom-scroll space-y-4 pb-10">
-                    <div class="bg-white p-6 rounded-2xl border shadow-sm h-fit">
-                        <h2 class="font-black text-lg mb-4 uppercase">Manajemen Akun</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3 text-xs">
-                            <input type="hidden"   id="addUserId">
-                            <input type="text"     id="addUserUsername" placeholder="Username (Tanpa Spasi)" class="p-3 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-bold transition">
-                            <input type="password" id="addUserPassword" placeholder="Password"               class="p-3 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-bold transition">
-                        </div>
-                        <div class="mb-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Hak Akses Menu</label>
-                            <div class="flex flex-wrap gap-2 text-xs font-bold">
-                                <label class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-lg border shadow-sm cursor-pointer"><input type="checkbox" value="kasir"    class="akses-cb accent-blue-600" checked disabled> Kasir</label>
-                                <label class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-lg border shadow-sm cursor-pointer"><input type="checkbox" value="gudang"   class="akses-cb accent-blue-600"> Gudang</label>
-                                <label class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-lg border shadow-sm cursor-pointer"><input type="checkbox" value="laporan"  class="akses-cb accent-blue-600"> Laporan</label>
-                                <label class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-lg border shadow-sm cursor-pointer"><input type="checkbox" value="pengguna" class="akses-cb accent-blue-600"> User</label>
-                                <label class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-lg border shadow-sm cursor-pointer"><input type="checkbox" value="setting"  class="akses-cb accent-blue-600"> Setting</label>
-                                <label class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-lg border border-blue-200 shadow-sm cursor-pointer bg-blue-50"><input type="checkbox" value="reprint" class="akses-cb accent-blue-600"> 🖨 Reprint</label>
-                                <label class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-lg border border-orange-200 shadow-sm cursor-pointer bg-orange-50"><input type="checkbox" value="retur"   class="akses-cb accent-orange-500"> ↩ Retur</label>
-                            </div>
-                        </div>
-                        <div class="flex gap-2">
-                            <button id="btnSimpanUser"    onclick="simpanUser()"    class="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold text-xs hover:bg-blue-700 transition shadow-md">Simpan Akun</button>
-                            <button id="btnBatalEditUser" onclick="batalEditUser()" class="bg-red-50 text-red-600 px-6 py-3 rounded-lg font-bold text-xs hidden border border-red-100 hover:bg-red-100 transition">Batal</button>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-2xl border shadow-sm overflow-hidden h-fit">
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-50 border-b font-black text-slate-400 text-[10px] uppercase tracking-widest"><tr><th class="p-4">Username</th><th class="p-4">Akses</th><th class="p-4 text-center">Tindakan</th></tr></thead>
-                            <tbody id="listPengguna" class="divide-y divide-slate-100"></tbody>
-                        </table>
-                    </div>
-                </div>
 
                 <!-- PELANGGAN WA -->
                 <div id="tabPelanggan" class="tab-content hidden h-full overflow-y-auto custom-scroll space-y-4 pb-10">
@@ -282,14 +248,12 @@
                             </button>
                         </div>
                     </div>
-
-                    <!-- Tabel -->
                     <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
                         <div class="overflow-x-auto custom-scroll">
                             <table class="w-full text-left text-xs">
                                 <thead class="bg-slate-50 border-b font-black text-slate-400 text-[10px] uppercase tracking-widest sticky top-0">
                                     <tr>
-                                        <th class="p-4">Pelanggan / No WA</th>
+                                        <th class="p-4">No WA</th>
                                         <th class="p-4">Struk Terakhir</th>
                                         <th class="p-4 text-right">Total Belanja</th>
                                         <th class="p-4 text-center">Aksi</th>
@@ -329,12 +293,44 @@
                                 <button onclick="simpanPengaturanPrinter()" class="w-full bg-slate-800 text-white py-4 rounded-xl font-black uppercase tracking-widest shadow-md hover:bg-slate-900 transition active:scale-95 mt-2">Simpan Pengaturan Printer</button>
                             </div>
                         </div>
+                        <!-- Manajemen Akun (hanya super admin) -->
+                        <div id="sectionManajemenAkun" class="bg-white p-6 md:p-8 rounded-3xl border shadow-sm h-fit md:col-span-2">
+                            <h2 class="font-black text-xl mb-6 tracking-tight text-slate-900 border-b pb-3">👤 Manajemen Akun</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3 text-xs">
+                                <input type="hidden"   id="addUserId">
+                                <input type="text"     id="addUserUsername" placeholder="Username (Tanpa Spasi)" class="p-3 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-bold transition">
+                                <input type="password" id="addUserPassword" placeholder="Password"               class="p-3 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-bold transition">
+                            </div>
+                            <div class="mb-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Hak Akses Menu</label>
+                                <div class="flex flex-wrap gap-2 text-xs font-bold">
+                                    <label class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-lg border shadow-sm cursor-pointer"><input type="checkbox" value="kasir"    class="akses-cb accent-blue-600" checked disabled> Kasir</label>
+                                    <label class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-lg border shadow-sm cursor-pointer"><input type="checkbox" value="gudang"   class="akses-cb accent-blue-600"> Gudang</label>
+                                    <label class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-lg border shadow-sm cursor-pointer"><input type="checkbox" value="laporan"  class="akses-cb accent-blue-600"> Laporan</label>
+                                    <label class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-lg border shadow-sm cursor-pointer"><input type="checkbox" value="pengguna" class="akses-cb accent-blue-600"> User</label>
+                                    <label class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-lg border shadow-sm cursor-pointer"><input type="checkbox" value="setting"  class="akses-cb accent-blue-600"> Setting</label>
+                                    <label class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-lg border border-blue-200 shadow-sm cursor-pointer bg-blue-50"><input type="checkbox" value="reprint" class="akses-cb accent-blue-600"> 🖨 Reprint</label>
+                                    <label class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-lg border border-orange-200 shadow-sm cursor-pointer bg-orange-50"><input type="checkbox" value="retur"   class="akses-cb accent-orange-500"> ↩ Retur</label>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 mb-6">
+                                <button id="btnSimpanUser"    onclick="simpanUser()"    class="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold text-xs hover:bg-blue-700 transition shadow-md">Simpan Akun</button>
+                                <button id="btnBatalEditUser" onclick="batalEditUser()" class="bg-red-50 text-red-600 px-6 py-3 rounded-lg font-bold text-xs hidden border border-red-100 hover:bg-red-100 transition">Batal</button>
+                            </div>
+                            <div class="bg-white rounded-xl border overflow-hidden">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-slate-50 border-b font-black text-slate-400 text-[10px] uppercase tracking-widest"><tr><th class="p-4">Username</th><th class="p-4">Akses</th><th class="p-4 text-center">Tindakan</th></tr></thead>
+                                    <tbody id="listPengguna" class="divide-y divide-slate-100"></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
             </div>
         </main>
     </div>
+
 
     <!-- MODAL ALERT -->
     <div id="modalAlert" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[1001] p-4 backdrop-blur-sm transition-opacity no-print opacity-0">
