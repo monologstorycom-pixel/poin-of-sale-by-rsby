@@ -3,6 +3,9 @@
 > **Point of Sale berbasis Web** yang ringan, cepat, dan bisa dipakai dari HP maupun komputer. Dibangun dengan Node.js + MySQL, tanpa framework berat.
 
 ---
+Demo : http://server.rsby.cloud:3000/
+username: rsby
+password: 1234
 
 ## ✨ Fitur Utama
 
