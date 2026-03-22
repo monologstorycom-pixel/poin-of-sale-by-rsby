@@ -235,6 +235,17 @@ app.put('/api/transaksi/wa/:id', (req, res) => {
     });
 });
 
+// Daftar nomor WA pelanggan (hanya untuk super admin/owner)
+app.get('/api/pelanggan-wa', (req, res) => {
+    db.query(
+        `SELECT t.id, t.no_struk, t.tanggal, t.total_bayar, t.kasir, t.metode_bayar, t.wa_pelanggan
+         FROM transaksi t
+         WHERE t.wa_pelanggan IS NOT NULL AND t.wa_pelanggan != ''
+         ORDER BY t.tanggal DESC`,
+        (err, results) => res.json(results || [])
+    );
+});
+
 app.get('/api/terlaris', (req, res) =>
     db.query('SELECT nama_barang, SUM(qty) as total_qty FROM detail_transaksi GROUP BY barcode,nama_barang ORDER BY total_qty DESC LIMIT 5', (err, results) => res.json(results || [])));
 
