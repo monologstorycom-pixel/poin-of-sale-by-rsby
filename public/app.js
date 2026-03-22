@@ -161,7 +161,7 @@ function checkAuth() {
             const userInfoEl = document.getElementById('userInfo');
             if (userInfoEl) userInfoEl.innerText = name.toUpperCase();
 
-            const all = ['dashboard','kasir','gudang','laporan','pengguna','setting'];
+            const all = ['dashboard','kasir','gudang','laporan','retur','pengguna','setting','reprint'];
             if (name === 'owner' || role === 'owner' || role === 'admin' || role.includes('dashboard')) {
                 currentPermissions = [...all];
             } else if (typeof role === 'string' && role.trim() !== '') {
@@ -170,6 +170,10 @@ function checkAuth() {
                 currentPermissions = ['kasir'];
             }
             if (!currentPermissions.includes('kasir')) currentPermissions.push('kasir');
+            // Kalau punya 'reprint' tapi tidak punya 'retur', tetap dapat akses tab Retur
+            if (currentPermissions.includes('reprint') && !currentPermissions.includes('retur')) {
+                currentPermissions.push('retur');
+            }
 
             all.forEach(t => {
                 const btn = document.getElementById('btnNav' + t.charAt(0).toUpperCase() + t.slice(1));
@@ -233,6 +237,7 @@ function showTab(t) {
     if (t === 'gudang')    loadBarang();
     if (t === 'laporan')   loadDataLaporan();
     if (t === 'kasir')     loadKatalogKasir();
+    if (t === 'retur')     loadTabRetur();
     if (t === 'pengguna')  loadUsers();
     toggleSidebar(true);
 }
@@ -288,7 +293,7 @@ function filterGudang() {
 async function simpanBarang() {
     const b = document.getElementById('addBarcode').value.trim(); const n = document.getElementById('addNama').value.trim(); const hj = document.getElementById('addHarga').value;
     const hb = document.getElementById('addHargaBeli').value || 0; const s = document.getElementById('addStok').value || 0;
-    const k = document.getElementById('addKategori').value.trim() || '-'; const st = document.getElementById('addSatuan').value.trim() || 'pcs';
+    const k = (document.getElementById('addKategori').value.trim() || '-').toUpperCase(); const st = document.getElementById('addSatuan').value.trim() || 'pcs';
     if (!b || !n || !hj) return showAlert('Perhatian', 'Barcode, Nama Produk, dan Harga Jual WAJIB diisi!', 'error');
     const btn = document.getElementById('btnSimpanBarang');
     // FIX #7: disable button untuk cegah double-submit
@@ -319,7 +324,11 @@ async function loadKatalogKasir() {
         dataKatalog = Array.isArray(d) ? d : []; // fetch SEKALI simpan global
 
         const cats = ['All'];
-        dataKatalog.forEach(i => { const k = i.kategori || '-'; if (!cats.includes(k)) cats.push(k); });
+        dataKatalog.forEach(i => {
+            // Normalisasi uppercase supaya 'rokok' dan 'ROKOK' dianggap sama
+            const k = (i.kategori || '-').toUpperCase();
+            if (!cats.includes(k)) cats.push(k);
+        });
         const catContainer = document.getElementById('containerKategori');
         if (catContainer) {
             catContainer.innerHTML = cats.map(c =>
@@ -330,14 +339,15 @@ async function loadKatalogKasir() {
     } catch(e) { console.error('Gagal load katalog:', e); dataKatalog = []; filterKatalog(); }
 }
 
-function setCategory(c) { activeCategory = c; loadKatalogKasir(); }
+function setCategory(c) { activeCategory = c === 'All' ? 'All' : c.toUpperCase(); loadKatalogKasir(); }
 
 function filterKatalog() {
     if (!dataKatalog) return;
     const kw = ((document.getElementById('cariKatalog')?.value || '') || (document.getElementById('scanBarcode')?.value || '')).toLowerCase();
     const filtered = dataKatalog.filter(i => {
         const matchSearch = (i.nama||'').toLowerCase().includes(kw) || (i.barcode||'').toLowerCase().includes(kw);
-        const matchCat    = activeCategory === 'All' || (i.kategori||'-') === activeCategory;
+        // Normalisasi uppercase supaya 'rokok' == 'ROKOK'
+        const matchCat    = activeCategory === 'All' || (i.kategori||'-').toUpperCase() === activeCategory;
         return matchSearch && matchCat;
     });
     const listEl = document.getElementById('listKatalogKasir'); if (!listEl) return;
@@ -354,12 +364,29 @@ function filterKatalog() {
 }
 
 function handleScan(e) {
+    // Filter realtime saat mengetik
     filterKatalog();
-    if (e.key === 'Enter') {
-        const bc = document.getElementById('scanBarcode').value.trim(); if (!bc) return;
+
+    // Tangkap Enter di desktop maupun tombol "Go"/"Done" di keyboard mobile
+    if (e.key === 'Enter' || e.keyCode === 13) {
+        // Cegah default: pindah focus ke input berikutnya (cariKatalog) di mobile
+        e.preventDefault();
+        e.stopPropagation();
+
+        const bc = document.getElementById('scanBarcode').value.trim();
+        if (!bc) return;
+
         const item = dataKatalog.find(i => i.barcode === bc);
-        if (item) tambahItem(bc); else showAlert('Tidak Ditemukan', 'Barcode tidak terdaftar.', 'error');
-        document.getElementById('scanBarcode').value = ''; filterKatalog();
+        if (item) {
+            tambahItem(bc);
+        } else {
+            showAlert('Tidak Ditemukan', 'Barcode tidak terdaftar.', 'error');
+        }
+        document.getElementById('scanBarcode').value = '';
+        filterKatalog();
+
+        // Kembalikan focus ke input scan supaya kasir bisa langsung scan lagi
+        document.getElementById('scanBarcode').focus();
     }
 }
 
@@ -593,6 +620,14 @@ function gambarTabelLaporan(data) {
     document.getElementById('lapLaba').innerText  = formatRupiah(o-m);
 }
 
+// ─── PERMISSION HELPER ────────────────────────────────────
+function hasPermission(p) {
+    // owner/admin/dashboard sudah dapat semua permission
+    const role = localStorage.getItem('userRole') || '';
+    if (['owner','admin'].includes(role) || role.includes('dashboard')) return true;
+    return currentPermissions.includes(p);
+}
+
 // ─── AUDIT MODAL ───────────────────────────────────────────
 // Hanya dua tombol: Print Ulang + Retur ke Kasir
 async function lihatDetailStruk(id, no, tgl, tot, kas, metode) {
@@ -638,15 +673,21 @@ async function lihatDetailStruk(id, no, tgl, tot, kas, metode) {
             kasir: kas, metode, total: tot, items: d
         });
 
-        document.getElementById('modalStrukActions').innerHTML = `
+        // Kontrol tombol berdasarkan permission user
+        const showReprint = hasPermission('reprint');
+        const showRetur   = hasPermission('retur');
+        const btnReprint  = showReprint ? `
           <button onclick='cetakUlangStruk(${reprintData})'
             class="w-full bg-blue-500 text-white font-bold py-3 text-sm rounded-xl hover:bg-blue-600 active:scale-95 transition uppercase tracking-widest mb-2">
             🖨️ Print Ulang Struk
-          </button>
+          </button>` : '';
+        const btnRetur = showRetur ? `
           <button onclick="returKeKasir()"
             class="w-full bg-orange-500 text-white font-bold py-3 text-sm rounded-xl hover:bg-orange-600 active:scale-95 transition uppercase tracking-widest mb-2">
             ↩ Retur — Edit &amp; Bayar Ulang
-          </button>
+          </button>` : '';
+
+        document.getElementById('modalStrukActions').innerHTML = btnReprint + btnRetur + `
           <button onclick="tutupModalStruk()"
             class="w-full bg-slate-100 text-slate-600 font-bold py-2.5 text-sm rounded-xl hover:bg-slate-200 transition">
             Tutup
@@ -739,6 +780,101 @@ async function returKeKasir() {
             }
         }
     );
+}
+
+// ─── TAB RETUR ─────────────────────────────────────────────
+// Data semua transaksi untuk tab retur
+var dataTabRetur = [];
+
+async function loadTabRetur() {
+    try {
+        // Set default tanggal hari ini jika belum diisi
+        const inputTgl = document.getElementById('filterReturTgl');
+        if (inputTgl && !inputTgl.value) {
+            inputTgl.value = new Date().toISOString().split('T')[0];
+        }
+        const res  = await fetch('/api/transaksi');
+        const data = await res.json();
+        dataTabRetur = Array.isArray(data) ? data : [];
+        filterTabRetur();
+    } catch { /* ignore */ }
+}
+
+function resetFilterRetur() {
+    const inputTgl = document.getElementById('filterReturTgl');
+    if (inputTgl) inputTgl.value = new Date().toISOString().split('T')[0];
+    const inputCari = document.getElementById('cariStrukRetur');
+    if (inputCari) inputCari.value = '';
+    filterTabRetur();
+}
+
+function filterTabRetur() {
+    const kw     = (document.getElementById('cariStrukRetur')?.value || '').toLowerCase();
+    const tgl    = document.getElementById('filterReturTgl')?.value || new Date().toISOString().split('T')[0];
+    const startDate = new Date(tgl); startDate.setHours(0,0,0,0);
+    const endDate   = new Date(tgl); endDate.setHours(23,59,59,999);
+
+    let filtered = dataTabRetur.filter(t => {
+        if (!t.tanggal) return false;
+        const ts = new Date(t.tanggal).getTime();
+        return ts >= startDate.getTime() && ts <= endDate.getTime();
+    });
+
+    // Filter keyword — cari di no_struk dan kasir
+    if (kw) {
+        filtered = filtered.filter(t =>
+            (t.no_struk || '').toLowerCase().includes(kw) ||
+            (t.kasir    || '').toLowerCase().includes(kw)
+        );
+    }
+
+    renderTabRetur(filtered);
+}
+
+function renderTabRetur(data) {
+    const listEl = document.getElementById('listTabRetur');
+    if (!listEl) return;
+
+    const canReprint = hasPermission('reprint');
+    const canRetur   = hasPermission('retur');
+
+    if (!data.length) {
+        listEl.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-slate-400 italic font-bold">Tidak ada transaksi.</td></tr>`;
+        return;
+    }
+
+    listEl.innerHTML = data.map(t => {
+        const tb = parseFloat(t.total_bayar) || 0;
+
+        // Tombol Reprint
+        const btnReprint = canReprint ? `
+          <button onclick="lihatDetailStruk('${t.id}','${t.no_struk}','${t.tanggal}',${tb},'${safeStr(t.kasir)||'Admin'}','${t.metode_bayar||'TUNAI'}')"
+            class="bg-blue-500 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-blue-600 active:scale-95 transition">
+            🖨️ Reprint
+          </button>` : '';
+
+        // Tombol Retur
+        const btnRetur = canRetur ? `
+          <button onclick="lihatDetailStruk('${t.id}','${t.no_struk}','${t.tanggal}',${tb},'${safeStr(t.kasir)||'Admin'}','${t.metode_bayar||'TUNAI'}')"
+            class="bg-orange-500 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-orange-600 active:scale-95 transition">
+            ↩ Retur
+          </button>` : '';
+
+        return `
+          <tr class="border-b hover:bg-slate-50 transition">
+            <td class="p-4">
+              <div class="font-bold text-blue-600 font-mono text-[10px] uppercase">${t.no_struk}</div>
+              <div class="text-[9px] text-slate-400 mt-0.5">${new Date(t.tanggal).toLocaleString('id-ID')}</div>
+              <div class="text-[8px] bg-slate-100 text-slate-500 inline-block px-1.5 py-0.5 rounded border mt-1 uppercase font-bold">
+                Kasir: ${safeStr(t.kasir)||'Admin'} • ${t.metode_bayar||'TUNAI'}
+              </div>
+            </td>
+            <td class="p-4 text-right font-black text-slate-800 text-xs">${formatRupiah(tb)}</td>
+            <td class="p-4">
+              <div class="flex gap-2 justify-center flex-wrap">${btnReprint}${btnRetur}</div>
+            </td>
+          </tr>`;
+    }).join('');
 }
 
 function cetakUlangStruk(data) {
