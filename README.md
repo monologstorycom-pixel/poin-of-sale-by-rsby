@@ -112,6 +112,163 @@ Dibangun dengan Node.js + MySQL, tanpa framework berat.
 
 ## 🚀 Cara Install
 
+---
+
+### 🪟 Instalasi di Windows (Lokal)
+
+Panduan ini untuk kamu yang mau jalankan POSweb di komputer Windows sendiri, cocok untuk warung/toko yang pakai PC kasir offline.
+
+#### Langkah 1 — Install Node.js
+
+1. Buka [https://nodejs.org](https://nodejs.org)
+2. Download versi **LTS** (misal: 20.x.x LTS)
+3. Jalankan installer `.msi`, klik Next terus sampai selesai
+4. Buka **Command Prompt** (tekan `Win + R`, ketik `cmd`, Enter)
+5. Verifikasi instalasi:
+```cmd
+node -v
+npm -v
+```
+> Kalau muncul versi (misal `v20.11.0`), berarti Node.js sudah terinstall ✅
+
+---
+
+#### Langkah 2 — Install MySQL via XAMPP (Cara Termudah)
+
+> XAMPP sudah include MySQL + phpMyAdmin, paling praktis untuk Windows.
+
+1. Download XAMPP di [https://www.apachefriends.org](https://www.apachefriends.org)
+2. Install XAMPP (ikuti wizard, pilih komponen **MySQL** dan **phpMyAdmin**)
+3. Buka **XAMPP Control Panel**
+4. Klik **Start** di baris **MySQL**
+5. Pastikan status MySQL jadi hijau ✅
+
+> **Catatan:** Tidak perlu buat database manual — POSweb akan membuat database otomatis saat setup.
+
+---
+
+#### Langkah 3 — Download POSweb
+
+**Opsi A — Pakai Git (direkomendasikan)**
+
+Install Git dulu dari [https://git-scm.com](https://git-scm.com), lalu:
+```cmd
+git clone https://github.com/monologstorycom-pixel/poin-of-sale-by-rsby.git
+cd poin-of-sale-by-rsby
+```
+
+**Opsi B — Download ZIP**
+
+1. Buka halaman GitHub repo ini
+2. Klik tombol hijau **Code** → **Download ZIP**
+3. Extract ZIP ke folder, misal: `C:\posweb`
+4. Buka Command Prompt, masuk ke folder tersebut:
+```cmd
+cd C:\posweb
+```
+
+---
+
+#### Langkah 4 — Install Dependencies
+
+Di dalam folder POSweb, jalankan:
+```cmd
+npm install
+```
+> Tunggu hingga selesai. Akan ada folder `node_modules` terbuat otomatis.
+
+---
+
+#### Langkah 5 — Jalankan Server
+
+```cmd
+node server.js
+```
+
+Kalau berhasil, muncul pesan:
+```
+[POSweb] 🚀 Server aktif di port 3000
+```
+
+---
+
+#### Langkah 6 — Setup Pertama Kali
+
+1. Buka browser (Chrome/Edge/Firefox)
+2. Akses: **http://localhost:3000**
+3. Akan muncul halaman installer — isi semua kolom:
+
+| Kolom | Nilai untuk XAMPP |
+|---|---|
+| Host | `127.0.0.1` |
+| Nama Database | `db_posweb` (bebas, akan dibuat otomatis) |
+| Username DB | `root` |
+| Password DB | *(kosongkan — default XAMPP tidak pakai password)* |
+| Nama Toko | Nama toko kamu |
+| Username Admin | Bebas (misal: `admin`) |
+| Password Admin | Bebas (minimal 4 karakter) |
+
+4. Klik **Install Sistem**
+5. Setelah sukses, browser otomatis redirect ke halaman login ✅
+
+---
+
+#### Langkah 7 — Login & Mulai Pakai
+
+- Buka **http://localhost:3000**
+- Login dengan username & password yang dibuat tadi
+- Selesai! POSweb siap digunakan 🎉
+
+---
+
+#### 💡 Tips Penggunaan di Windows
+
+**Supaya POSweb bisa diakses dari HP di jaringan yang sama (WiFi):**
+
+1. Cari IP lokal PC kamu — buka Command Prompt, ketik:
+```cmd
+ipconfig
+```
+Cari `IPv4 Address`, misal: `192.168.1.10`
+
+2. Dari HP, buka browser dan akses:
+```
+http://192.168.1.10:3000
+```
+
+> Pastikan HP dan PC terhubung ke WiFi yang sama.
+
+---
+
+**Supaya POSweb otomatis jalan saat Windows startup:**
+
+Install `pm2` secara global:
+```cmd
+npm install -g pm2
+pm2 start server.js --name posweb
+pm2 startup
+pm2 save
+```
+
+---
+
+**Kalau muncul error `EADDRINUSE port 3000`** artinya port 3000 sudah dipakai proses lain. Ganti port dengan:
+```cmd
+set PORT=3001 && node server.js
+```
+Lalu akses di `http://localhost:3001`
+
+---
+
+**Kalau muncul error koneksi MySQL:**
+- Pastikan MySQL di XAMPP Control Panel sudah **Start** (hijau)
+- Pastikan host diisi `127.0.0.1` bukan `localhost` (kadang bermasalah di Windows)
+- Coba cek MySQL berjalan di port 3306 (default)
+
+---
+
+### 🐧 Instalasi di Linux / VPS
+
 ### Prasyarat
 - **Node.js** v16 atau lebih baru
 - **MySQL** 5.7 / 8.x (atau MariaDB)
