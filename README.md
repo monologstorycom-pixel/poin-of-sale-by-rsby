@@ -32,8 +32,8 @@
 
 **1. Clone repositori**
 ```bash
-git clone https://github.com/monologstorycom-pixel/posweb-rsby.git
-cd posweb-rsby
+git clone https://github.com/monologstorycom-pixel/poin-of-sale-by-rsby.git
+cd poin-of-sale-by-rsby
 ```
 
 **2. Install dependencies**
