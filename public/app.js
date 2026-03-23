@@ -12,8 +12,9 @@ var totalModal         = 0;
 var profilToko         = {};
 var lastTrxData        = {};
 var currentLaporanType = 'harian';
-var chartOmzetInstance    = null;
-var chartTerlarisInstance = null;
+var chartOmzetInstance       = null;
+var chartTerlarisInstance    = null;
+var chartPerbandinganInstance = null;
 var metodeBayarActive  = 'Tunai';
 var isEditMode         = false;
 var isEditUserMode     = false;
@@ -49,6 +50,7 @@ function safeAttr(val) {
 
 const formatRupiah = (a) =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(a || 0);
+
 
 function formatInputBayar(i) {
     const v = i.value.replace(/\D/g, '');
@@ -659,27 +661,175 @@ async function loadDashboard() {
     try {
         const [resTx, resPr, resTr] = await Promise.all([fetch('/api/transaksi'), fetch('/api/produk'), fetch('/api/terlaris')]);
         const [txData, prData, trData] = await Promise.all([resTx.json(), resPr.json(), resTr.json()]);
-        let omzetHariIni = 0, labaHariIni = 0; const last7Days = [], omzet7Days = [];
+        const allTx = Array.isArray(txData) ? txData : [];
+        const allPr = Array.isArray(prData) ? prData : [];
+
+        // ── Tanggal helper ──────────────────────────────────────────
+        const today     = new Date();
+        const todayStr  = today.toISOString().split('T')[0];
+        const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+        const yesterStr = yesterday.toISOString().split('T')[0];
+
+        // ── 7 hari ini & 7 hari lalu ────────────────────────────────
+        const last7Labels = [], omzet7Ini = [], omzet7Lalu = [];
+        let omzetHariIni = 0, labaHariIni = 0, omzetKemarin = 0;
+        let trxHariIni = [];
+
         for (let i = 6; i >= 0; i--) {
-            const d = new Date(); d.setDate(d.getDate() - i); const dStr = d.toISOString().split('T')[0];
-            last7Days.push(d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }));
-            const dailyTx = (Array.isArray(txData) ? txData : []).filter(t => t.tanggal?.startsWith(dStr));
-            const dailyOmzet = dailyTx.reduce((s, t) => s + parseFloat(t.total_bayar || 0), 0);
-            omzet7Days.push(dailyOmzet);
-            if (i === 0) { omzetHariIni = dailyOmzet; labaHariIni = dailyTx.reduce((s, t) => s + (parseFloat(t.total_bayar||0) - parseFloat(t.total_modal||0)), 0); }
+            const d = new Date(); d.setDate(d.getDate() - i);
+            const dStr = d.toISOString().split('T')[0];
+            const dLaluStr = new Date(d.getTime() - 7 * 86400000).toISOString().split('T')[0];
+
+            last7Labels.push(d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }));
+
+            const txIni  = allTx.filter(t => t.tanggal?.startsWith(dStr));
+            const txLalu = allTx.filter(t => t.tanggal?.startsWith(dLaluStr));
+            const oIni   = txIni.reduce((s, t) => s + parseFloat(t.total_bayar || 0), 0);
+            const oLalu  = txLalu.reduce((s, t) => s + parseFloat(t.total_bayar || 0), 0);
+            omzet7Ini.push(oIni);
+            omzet7Lalu.push(oLalu);
+
+            if (i === 0) {
+                omzetHariIni = oIni;
+                omzetKemarin = allTx.filter(t => t.tanggal?.startsWith(yesterStr)).reduce((s, t) => s + parseFloat(t.total_bayar || 0), 0);
+                labaHariIni  = txIni.reduce((s, t) => s + (parseFloat(t.total_bayar||0) - parseFloat(t.total_modal||0) - parseFloat(t.ppn_nominal||0)), 0);
+                trxHariIni   = txIni;
+            }
         }
+
+        // ── Kartu Omzet + perbandingan vs kemarin ───────────────────
         document.getElementById('dashOmzetHariIni').innerText = formatRupiah(omzetHariIni);
-        document.getElementById('dashLabaHariIni').innerText  = formatRupiah(labaHariIni);
-        document.getElementById('dashTotalProduk').innerText  = (Array.isArray(prData) ? prData : []).length;
-        document.getElementById('dashTotalStok').innerText    = (Array.isArray(prData) ? prData : []).reduce((s, p) => s + parseInt(p.stok || 0), 0);
+        const vsKemarinEl = document.getElementById('dashOmzetVsKemarin');
+        if (vsKemarinEl) {
+            if (omzetKemarin === 0 && omzetHariIni === 0) {
+                vsKemarinEl.innerText = '';
+            } else if (omzetKemarin === 0) {
+                vsKemarinEl.innerHTML = '<span class="text-green-500">↑ Kemarin Rp0</span>';
+            } else {
+                const pct = ((omzetHariIni - omzetKemarin) / omzetKemarin * 100).toFixed(1);
+                const naik = omzetHariIni >= omzetKemarin;
+                vsKemarinEl.innerHTML = '<span class="' + (naik ? 'text-green-500' : 'text-red-400') + '">' +
+                    (naik ? '↑' : '↓') + ' ' + Math.abs(pct) + '% vs kemarin</span>';
+            }
+        }
+
+        // ── Kartu Laba + jumlah transaksi ───────────────────────────
+        document.getElementById('dashLabaHariIni').innerText = formatRupiah(labaHariIni);
+        const trxEl = document.getElementById('dashTrxHariIni');
+        if (trxEl) trxEl.innerText = trxHariIni.length + ' transaksi hari ini';
+
+        // ── Kartu Produk ─────────────────────────────────────────────
+        document.getElementById('dashTotalProduk').innerText = allPr.length;
+        const prodDiskonEl = document.getElementById('dashProdukDiskon');
+        const jmlDiskon = allPr.filter(p => parseFloat(p.diskon||0) > 0).length;
+        if (prodDiskonEl) prodDiskonEl.innerText = jmlDiskon > 0 ? jmlDiskon + ' produk promo' : '';
+
+        // ── Kartu Stok ───────────────────────────────────────────────
+        document.getElementById('dashTotalStok').innerText = allPr.reduce((s, p) => s + parseInt(p.stok || 0), 0);
+        const batasStok = 5;
+        const stokRendah = allPr.filter(p => parseInt(p.stok||0) <= batasStok);
+        const stokRendahEl = document.getElementById('dashStokRendah');
+        if (stokRendahEl) stokRendahEl.innerText = stokRendah.length > 0 ? stokRendah.length + ' produk stok rendah' : '';
+
+        // ── Notifikasi alert stok hampir habis ──────────────────────
+        const alertBox  = document.getElementById('alertStokHabis');
+        const alertList = document.getElementById('alertStokList');
+        const alertCount = document.getElementById('alertStokCount');
+        if (alertBox && alertList) {
+            if (stokRendah.length > 0) {
+                alertBox.classList.remove('hidden');
+                if (alertCount) alertCount.innerText = stokRendah.length;
+                alertList.innerHTML = stokRendah.map(p =>
+                    '<span class="bg-red-100 border border-red-200 text-red-700 text-[9px] font-black px-2 py-1 rounded-lg">' +
+                    p.nama + ' <span class="opacity-60">(' + p.stok + ' ' + (p.satuan||'pcs') + ')</span></span>'
+                ).join('');
+            } else {
+                alertBox.classList.add('hidden');
+            }
+        }
+
+        // ── Transaksi Terakhir Hari Ini ──────────────────────────────
+        const trxTerakhirEl = document.getElementById('dashTrxTerakhir');
+        const jmlTrxEl      = document.getElementById('dashJmlTrx');
+        if (jmlTrxEl) jmlTrxEl.innerText = trxHariIni.length + ' transaksi';
+        if (trxTerakhirEl) {
+            const last5 = [...trxHariIni].reverse().slice(0, 5);
+            if (last5.length === 0) {
+                trxTerakhirEl.innerHTML = '<div class="px-4 py-6 text-center text-slate-300 text-xs font-bold italic">Belum ada transaksi hari ini</div>';
+            } else {
+                trxTerakhirEl.innerHTML = last5.map(t => {
+                    const laba = (parseFloat(t.total_bayar||0) - parseFloat(t.total_modal||0) - parseFloat(t.ppn_nominal||0));
+                    const jam  = new Date(t.tanggal).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                    return '<div class="flex items-center justify-between px-4 py-2.5 hover:bg-slate-50">' +
+                        '<div>' +
+                            '<div class="text-[10px] font-black text-blue-600 font-mono">' + t.no_struk + '</div>' +
+                            '<div class="text-[9px] text-slate-400 font-semibold">' + jam + ' · ' + (t.kasir||'Admin') + ' · ' + (t.metode_bayar||'TUNAI') + '</div>' +
+                        '</div>' +
+                        '<div class="text-right">' +
+                            '<div class="text-xs font-black text-slate-800">' + formatRupiah(t.total_bayar) + '</div>' +
+                            '<div class="text-[9px] font-bold text-green-600">Laba ' + formatRupiah(laba) + '</div>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+            }
+        }
+
+        // ── Charts ──────────────────────────────────────────────────
         if (typeof Chart !== 'undefined') {
+            // Chart trend 7 hari
             if (chartOmzetInstance) chartOmzetInstance.destroy();
-            chartOmzetInstance = new Chart(document.getElementById('chartOmzet').getContext('2d'), { type: 'line', data: { labels: last7Days, datasets: [{ label: 'Omzet (Rp)', data: omzet7Days, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.08)', borderWidth: 2, fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+            chartOmzetInstance = new Chart(document.getElementById('chartOmzet').getContext('2d'), {
+                type: 'line',
+                data: { labels: last7Labels, datasets: [{ label: 'Omzet', data: omzet7Ini, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.08)', borderWidth: 2, fill: true, tension: 0.3, pointRadius: 3 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: v => 'Rp' + (v >= 1000000 ? (v/1000000).toFixed(1)+'jt' : v >= 1000 ? (v/1000).toFixed(0)+'rb' : v), font: { size: 8 } }, grid: { color: '#f1f5f9' } }, x: { ticks: { font: { size: 8 } } } } }
+            });
+
+            // Chart terlaris
             if (chartTerlarisInstance) chartTerlarisInstance.destroy();
             const topData = Array.isArray(trData) ? trData : [];
-            chartTerlarisInstance = new Chart(document.getElementById('chartTerlaris').getContext('2d'), { type: 'bar', data: { labels: topData.map(d => d.nama_barang), datasets: [{ label: 'Terjual (Qty)', data: topData.map(d => d.total_qty), backgroundColor: '#16a34a', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+            chartTerlarisInstance = new Chart(document.getElementById('chartTerlaris').getContext('2d'), {
+                type: 'bar',
+                data: { labels: topData.map(d => d.nama_barang), datasets: [{ label: 'Terjual', data: topData.map(d => d.total_qty), backgroundColor: '#16a34a', borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { font: { size: 8 }, maxRotation: 30 } }, y: { ticks: { font: { size: 8 } }, grid: { color: '#f1f5f9' } } } }
+            });
+
+            // Chart perbandingan minggu ini vs minggu lalu
+            if (chartPerbandinganInstance) chartPerbandinganInstance.destroy();
+            chartPerbandinganInstance = new Chart(document.getElementById('chartPerbandingan').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: last7Labels,
+                    datasets: [
+                        { label: 'Minggu Ini',  data: omzet7Ini,  backgroundColor: 'rgba(37,99,235,0.8)',  borderRadius: 4 },
+                        { label: 'Minggu Lalu', data: omzet7Lalu, backgroundColor: 'rgba(148,163,184,0.5)', borderRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { callback: v => v >= 1000000 ? (v/1000000).toFixed(1)+'jt' : v >= 1000 ? (v/1000).toFixed(0)+'rb' : v, font: { size: 8 } }, grid: { color: '#f1f5f9' } },
+                        x: { ticks: { font: { size: 8 } } }
+                    }
+                }
+            });
+
+            // Ringkasan perbandingan
+            const totalIni  = omzet7Ini.reduce((s, v) => s + v, 0);
+            const totalLalu = omzet7Lalu.reduce((s, v) => s + v, 0);
+            const ringkasanEl = document.getElementById('ringkasanPerbandingan');
+            if (ringkasanEl) {
+                if (totalLalu === 0) {
+                    ringkasanEl.innerText = 'Minggu ini total ' + formatRupiah(totalIni);
+                } else {
+                    const pct  = ((totalIni - totalLalu) / totalLalu * 100).toFixed(1);
+                    const naik = totalIni >= totalLalu;
+                    ringkasanEl.innerHTML = 'Minggu ini <b>' + formatRupiah(totalIni) + '</b> vs minggu lalu <b>' + formatRupiah(totalLalu) + '</b> ' +
+                        '<span class="' + (naik ? 'text-green-600' : 'text-red-500') + ' font-black">' + (naik ? '↑' : '↓') + ' ' + Math.abs(pct) + '%</span>';
+                }
+            }
         }
-    } catch(e) { console.error(e); }
+    } catch(e) { console.error('loadDashboard error:', e); }
 }
 
 // ─── SETTING ───────────────────────────────────────────────
@@ -1193,8 +1343,22 @@ function gambarTabelLaporan(data) {
     document.getElementById('lapOmzet').innerText = formatRupiah(o);
     document.getElementById('lapModal').innerText = formatRupiah(m);
     document.getElementById('lapLaba').innerText  = formatRupiah(o - m - totalPPN);
-    const elPPN = document.getElementById('lapPPN');
-    if (elPPN) elPPN.innerText = totalPPN > 0 ? formatRupiah(totalPPN) : '-';
+
+
+    // Tampilkan/sembunyikan card PPN berdasarkan SETTING ppnAktif, bukan nilai data
+    const cardPPNEl = document.getElementById('cardPPN');
+    const gridEl    = document.getElementById('gridKartuLaporan');
+    const elPPN     = document.getElementById('lapPPN');
+    if (ppnAktif && ppnPct > 0) {
+        // PPN setting ON — tampilkan card, grid jadi 2x2 di mobile / 4 kolom di desktop
+        if (cardPPNEl) cardPPNEl.classList.remove('hidden');
+        if (gridEl)    { gridEl.classList.remove('grid-cols-3'); gridEl.classList.add('grid-cols-2'); gridEl.classList.remove('md:grid-cols-3'); gridEl.classList.add('md:grid-cols-4'); }
+        if (elPPN)     elPPN.innerText = totalPPN > 0 ? formatRupiah(totalPPN) : 'Rp0';
+    } else {
+        // PPN setting OFF — sembunyikan card, grid kembali 3 kolom
+        if (cardPPNEl) cardPPNEl.classList.add('hidden');
+        if (gridEl)    { gridEl.classList.add('grid-cols-3'); gridEl.classList.remove('grid-cols-2'); gridEl.classList.add('md:grid-cols-3'); gridEl.classList.remove('md:grid-cols-4'); }
+    }
 }
 
 // ─── PERMISSION HELPER ────────────────────────────────────
@@ -1925,23 +2089,139 @@ async function langungUnduhPDF(id, no, tgl, tot, kas, metode) {
 }
 
 function _doUnduhPDF(data) {
-    var html     = buildStrukHTML(data);
+    if (typeof window.jspdf === 'undefined') {
+        showAlert('Gagal', 'Library PDF belum siap. Pastikan koneksi internet aktif lalu refresh halaman.', 'error');
+        return;
+    }
+
+    var jsPDF    = window.jspdf.jsPDF;
     var filename = 'struk-' + (data.no || 'transaksi').replace(/[^a-zA-Z0-9]/g, '-') + '.pdf';
-    var iframe   = document.createElement('iframe');
-    iframe.style.cssText = 'position:fixed;right:-9999px;bottom:-9999px;width:220px;height:1px;border:none;';
-    document.body.appendChild(iframe);
-    var iDoc = iframe.contentWindow.document;
-    iDoc.open(); iDoc.write(html); iDoc.close();
-    setTimeout(function() {
-        try {
-            iframe.contentWindow.focus();
-            iframe.contentDocument.title = filename;
-            iframe.contentWindow.print();
-        } catch(e) { console.error(e); }
-        setTimeout(function() {
-            if (iframe.parentNode) document.body.removeChild(iframe);
-        }, 3000);
-    }, 400);
+    var toko     = profilToko.nama_toko   || '';
+    var alamat   = profilToko.alamat_toko || '';
+    var footer   = localStorage.getItem('footerStruk') || 'Terima Kasih';
+
+    // Tulis langsung ke PDF pakai jsPDF text — tidak render ke DOM sama sekali
+    var doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [58, 297] });
+    var x   = 29;   // center 58mm
+    var y   = 8;
+    var lh  = 4.5;  // line height mm
+
+    function line(txt, bold, size, align) {
+        doc.setFontSize(size || 8);
+        doc.setFont('helvetica', bold ? 'bold' : 'normal');
+        if (align === 'left')       doc.text(String(txt), 4, y);
+        else if (align === 'right') doc.text(String(txt), 54, y, { align: 'right' });
+        else                         doc.text(String(txt), x, y, { align: 'center' });
+        y += lh;
+    }
+    function separator() {
+        doc.setDrawColor(0);
+        doc.line(4, y, 54, y);
+        y += 2;
+    }
+    function dashedLine() {
+        // Garis putus-putus manual
+        doc.setLineDashPattern([1, 1], 0);
+        doc.line(4, y, 54, y);
+        doc.setLineDashPattern([], 0);
+        y += 2;
+    }
+
+    // Header toko
+    if (profilToko.logo_toko) {
+        try { doc.addImage(profilToko.logo_toko, 'JPEG', 22, y, 14, 14); y += 16; } catch(e) {}
+    }
+    line(toko.toUpperCase(), true, 10);
+    if (alamat) line(alamat, false, 7);
+    if (profilToko.telp_toko) line('Telp: ' + profilToko.telp_toko, false, 7);
+    if (profilToko.jam_text) line(profilToko.jam_text, false, 6.5);
+    dashedLine();
+
+    // Info transaksi
+    line(data.tanggal || new Date().toLocaleString('id-ID'), false, 7);
+    line(data.no, true, 8);
+    line('Kasir: ' + (data.kasir || ''), false, 7);
+    dashedLine();
+
+    // Item
+    var items = data.items || [];
+    items.forEach(function(i) {
+        var nama     = i.nama_barang || i.nama || '';
+        var qty      = i.qty || 0;
+        var harga    = parseFloat(i.harga || i.harga_jual || 0);
+        var subtotal = parseFloat(i.subtotal || (qty * harga));
+        var dk       = parseFloat(i.diskon || 0);
+
+        doc.setFontSize(8); doc.setFont('helvetica', 'bold');
+        doc.text(nama, 4, y);
+        y += lh;
+
+        doc.setFont('helvetica', 'normal');
+        var qtyStr = qty + ' x ' + formatRupiah(harga) + (dk > 0 ? ' (-' + dk + '%)' : '');
+        doc.text(qtyStr, 6, y);
+        doc.text(formatRupiah(subtotal), 54, y, { align: 'right' });
+        y += lh;
+    });
+
+    dashedLine();
+
+    // Diskon per produk
+    var adaDiskonProduk = items.some(function(i) { return parseFloat(i.diskon||0) > 0; });
+    if (adaDiskonProduk) {
+        items.filter(function(i){ return parseFloat(i.diskon||0) > 0; }).forEach(function(i) {
+            var nom = Math.round(parseFloat(i.harga||i.harga_jual||0) * (i.qty||1) * parseFloat(i.diskon) / 100);
+            doc.setFontSize(7); doc.setFont('helvetica', 'normal');
+            doc.text('Diskon ' + (i.nama_barang||i.nama||'').slice(0,14) + ' (' + i.diskon + '%)', 4, y);
+            doc.text('-' + formatRupiah(nom), 54, y, { align: 'right' });
+            y += lh;
+        });
+    }
+
+    // Diskon global
+    if (data.diskon_nominal > 0) {
+        doc.setFontSize(7); doc.setFont('helvetica', 'normal');
+        var subtotalKotor = (data.total || 0) + (data.diskon_nominal || 0) - (data.ppn_nominal || 0);
+        doc.text('Subtotal', 4, y); doc.text(formatRupiah(subtotalKotor), 54, y, { align: 'right' }); y += lh;
+        doc.text('Diskon ' + (data.diskonPct || ''), 4, y); doc.text('-' + formatRupiah(data.diskon_nominal), 54, y, { align: 'right' }); y += lh;
+    }
+
+    // PPN
+    if (data.ppn_nominal > 0) {
+        doc.setFontSize(7); doc.setFont('helvetica', 'normal');
+        doc.text('PPN ' + (data.ppnPct || '') + '%', 4, y);
+        doc.text('+' + formatRupiah(data.ppn_nominal), 54, y, { align: 'right' });
+        y += lh;
+    }
+
+    separator();
+
+    // Total
+    doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+    doc.text('TOTAL', 4, y); doc.text(formatRupiah(data.total), 54, y, { align: 'right' }); y += lh;
+
+    doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+    doc.text('METODE', 4, y); doc.text((data.metode || 'TUNAI').toUpperCase(), 54, y, { align: 'right' }); y += lh;
+
+    var isTunai = (data.metode || '').toUpperCase() !== 'QRIS';
+    if (isTunai) {
+        var bayar = data.bayar || data.total;
+        doc.text('TUNAI',   4, y); doc.text(formatRupiah(bayar), 54, y, { align: 'right' }); y += lh;
+        doc.text('KEMBALI', 4, y); doc.text(formatRupiah(bayar - data.total), 54, y, { align: 'right' }); y += lh;
+    }
+
+    dashedLine();
+
+    // Footer
+    doc.setFontSize(7); doc.setFont('helvetica', 'italic');
+    doc.text(footer, x, y, { align: 'center' });
+
+    // Crop PDF ke tinggi konten
+    var finalHeight = y + 6;
+    var docFinal = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [58, finalHeight] });
+    // Salin halaman ke doc baru dengan tinggi pas
+    var pageData = doc.output('arraybuffer');
+    // Langsung save dari doc asli — jsPDF tidak crop otomatis tapi format sudah 297mm yang cukup
+    doc.save(filename);
 }
 
 window.onload = function () {
