@@ -120,6 +120,7 @@
                             </div>
                         </div>
                         <div id="badgeDiskonGlobal" class="hidden mx-2 mt-1.5 bg-green-50 border border-green-200 text-green-700 text-[10px] font-black px-3 py-1.5 rounded-lg text-center uppercase tracking-widest"></div>
+                        <div id="badgePPNKeranjang" class="hidden mx-2 mt-1 bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-black px-3 py-1.5 rounded-lg text-center uppercase tracking-widest"></div>
                         <div class="flex-grow overflow-y-auto custom-scroll p-1" id="areaKeranjang">
                             <div class="text-center py-12 text-slate-300 italic text-[11px] uppercase font-bold tracking-widest">Keranjang Kosong</div>
                         </div>
@@ -198,16 +199,18 @@
                         <button onclick="cetakLaporanPDF()" class="bg-slate-900 text-white font-bold px-4 py-2.5 rounded-lg text-xs transition ml-auto uppercase shadow-md hover:bg-black">Cetak PDF</button>
                     </div>
                     <div class="text-center font-black text-slate-800 text-sm uppercase tracking-widest" id="teksFilterLaporan">Memuat Laporan...</div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <div class="bg-blue-600  p-5 rounded-2xl text-white shadow-sm text-center"><p class="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">Omzet</p><h1 id="lapOmzet" class="text-2xl font-black truncate">Rp0</h1></div>
                         <div class="bg-slate-700 p-5 rounded-2xl text-white shadow-sm text-center"><p class="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">Modal</p><h1 id="lapModal" class="text-2xl font-black truncate">Rp0</h1></div>
                         <div class="bg-green-600 p-5 rounded-2xl text-white shadow-sm text-center"><p class="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">Laba Bersih</p><h1 id="lapLaba" class="text-2xl font-black truncate">Rp0</h1></div>
+                        <div class="bg-blue-800 p-5 rounded-2xl text-white shadow-sm text-center"><p class="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">Total PPN</p><h1 id="lapPPN" class="text-2xl font-black truncate">-</h1></div>
+                        <div id="cardPPN" class="hidden bg-violet-600 p-5 rounded-2xl text-white shadow-sm text-center md:col-span-3"><p class="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">Total PPN Terkumpul</p><h1 id="lapPPN" class="text-2xl font-black truncate">Rp0</h1></div>
                     </div>
                     <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
                         <div id="areaCariStruk" class="p-3 border-b bg-slate-50"><input type="text" id="cariStruk" placeholder="Cari No Struk..." class="w-full p-2.5 text-sm rounded-lg border outline-none focus:ring-2 focus:ring-blue-400" oninput="pencarianStruk()"></div>
                         <div class="overflow-x-auto max-h-[50vh] custom-scroll">
                             <table class="w-full text-left text-xs">
-                                <thead class="bg-white border-b sticky top-0 font-black text-slate-400 text-[10px] uppercase tracking-widest"><tr id="theadLaporan"><th class="p-4">Struk / Kasir</th><th class="p-4 text-right">Rincian</th><th class="p-4 text-center">Audit</th></tr></thead>
+                                <thead class="bg-white border-b sticky top-0 font-black text-slate-400 text-[10px] uppercase tracking-widest"><tr id="theadLaporan"><th class="p-4">Struk / Kasir</th><th class="p-4 text-right">Netto</th><th class="p-4 text-right">PPN</th><th class="p-4 text-right">Total</th><th class="p-4 text-center">Audit</th></tr></thead>
                                 <tbody id="listLaporan" class="divide-y divide-slate-100"></tbody>
                             </table>
                         </div>
@@ -475,6 +478,65 @@
                                 </div>
                             </div>
 
+
+                            <!-- PPN / Pajak -->
+                            <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+                                <div class="px-6 py-4 border-b bg-slate-50 flex items-center justify-between">
+                                    <div>
+                                        <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Pajak / PPN</h3>
+                                        <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Dihitung setelah diskon, ditampilkan di struk</p>
+                                    </div>
+                                    <label class="flex items-center gap-2 cursor-pointer shrink-0">
+                                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Aktif</span>
+                                        <div class="relative">
+                                            <input type="checkbox" id="setPPNAktif" class="sr-only peer" onchange="updatePreviewPPN()">
+                                            <div class="w-9 h-5 bg-slate-200 peer-checked:bg-blue-600 rounded-full transition-colors"></div>
+                                            <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="p-6 space-y-4">
+                                    <div>
+                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Persentase PPN</label>
+                                        <div class="flex items-center gap-3">
+                                            <input type="number" id="setPPNPct" value="11" min="0" max="100" placeholder="11" oninput="updatePreviewPPN()"
+                                                class="w-24 p-3 bg-slate-50 border rounded-xl font-black text-lg outline-none focus:ring-2 focus:ring-blue-500 transition text-center">
+                                            <span class="text-xl font-black text-slate-500">%</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Mode PPN</label>
+                                        <div class="space-y-2">
+                                            <label class="flex items-start gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition hover:border-slate-300 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                                                <input type="radio" name="ppnMode" id="ppnModeExclude" value="exclude" class="accent-blue-600 mt-0.5 shrink-0" checked onchange="updatePreviewPPN()">
+                                                <div>
+                                                    <div class="font-black text-sm text-slate-800">Harga Belum Termasuk Pajak <span class="text-[9px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-bold ml-1">EXCLUDE</span></div>
+                                                    <div class="text-[10px] text-slate-500 font-semibold mt-0.5 leading-relaxed">PPN ditambahkan di atas harga. Total bayar = Harga + Pajak.</div>
+                                                    <div class="text-[10px] text-blue-600 font-bold mt-1">Contoh: Rp100.000 + PPN 11% = <span class="font-black">Rp111.000</span></div>
+                                                </div>
+                                            </label>
+                                            <label class="flex items-start gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition hover:border-slate-300 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                                                <input type="radio" name="ppnMode" id="ppnModeInclude" value="include" class="accent-blue-600 mt-0.5 shrink-0" onchange="updatePreviewPPN()">
+                                                <div>
+                                                    <div class="font-black text-sm text-slate-800">Harga Sudah Termasuk Pajak <span class="text-[9px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-bold ml-1">INCLUDE</span></div>
+                                                    <div class="text-[10px] text-slate-500 font-semibold mt-0.5 leading-relaxed">Harga jual sudah include PPN. Total tidak berubah, pajak diekstrak untuk pelaporan.</div>
+                                                    <div class="text-[10px] text-blue-600 font-bold mt-1">Contoh: Rp111.000 sudah include PPN → pajak diekstrak <span class="font-black">Rp11.000</span></div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div id="boxPreviewPPN" class="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 hidden">
+                                        <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Preview</p>
+                                        <div id="isiPreviewPPN" class="text-[11px] text-blue-700 font-semibold leading-relaxed"></div>
+                                    </div>
+                                    <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                                        <p class="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-1">Pengaruh ke Laporan</p>
+                                        <p class="text-[11px] text-amber-700 font-semibold leading-relaxed">PPN bukan pendapatan toko. Di laporan: <span class="font-black">Omzet</span> (total bayar) • <span class="font-black">Laba Bersih</span> (setelah pajak dikurangi) • <span class="font-black">Total PPN</span> yang harus disetor ke negara.</p>
+                                    </div>
+                                    <button onclick="simpanPengaturanTransaksi()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-black text-sm uppercase tracking-widest shadow-md hover:bg-black transition active:scale-95">Simpan Pengaturan PPN</button>
+                                </div>
+                            </div>
+
                         </div>
 
                         <!-- ── PRINTER & STRUK ── -->
@@ -709,6 +771,7 @@
             <div id="areaStrukDiskonProduk"></div>
             <div id="areaStrukDiskonGlobal" class="hidden"><div class="flex justify-between text-[9px]"><span>SUBTOTAL</span><span id="strukSubtotalPrint"></span></div><div class="flex justify-between text-[9px] text-green-700"><span id="strukDiskonLabel">DISKON</span><span id="strukDiskonPrint"></span></div></div>
             <div class="flex justify-between"><span>TOTAL</span><span id="strukTotalPrint"></span></div>
+            <div id="areaStrukPPN" class="hidden"><div class="flex justify-between text-[9px] text-blue-700"><span id="strukPPNLabel">PPN 11%</span><span id="strukPPNPrint"></span></div></div>
             <div class="flex justify-between"><span>METODE</span><span id="strukMetodePrint"></span></div>
             <div id="areaStrukTunai"   class="flex justify-between"><span>TUNAI</span><span id="strukTunaiPrint"></span></div>
             <div id="areaStrukKembali" class="flex justify-between"><span>KEMBALI</span><span id="strukKembaliPrint"></span></div>
