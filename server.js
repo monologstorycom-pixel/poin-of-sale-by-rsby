@@ -3,10 +3,113 @@ const mysql   = require('mysql2');
 const cors    = require('cors');
 const path    = require('path');
 const fs      = require('fs');
+const crypto  = require('crypto');
 
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
+
+// ─── JWT SECRET — PERSISTEN DI config.json ────────────────
+// Secret dibuat sekali saat install, tidak berubah walau server restart
+// Sehingga token tetap valid meski server di-restart atau pindah hosting
+let JWT_SECRET = '';
+
+function loadOrCreateSecret() {
+    try {
+        const raw = fs.existsSync(configPath) ? fs.readFileSync(configPath, 'utf8') : '';
+        if (!raw.trim()) return;
+        const cfg = JSON.parse(raw);
+        if (cfg.jwt_secret) {
+            JWT_SECRET = cfg.jwt_secret;
+            console.log('[Auth] JWT Secret loaded dari config.json');
+        } else {
+            // Buat secret baru dan simpan permanen ke config.json
+            JWT_SECRET = crypto.randomBytes(32).toString('hex');
+            cfg.jwt_secret = JWT_SECRET;
+            fs.writeFileSync(configPath, JSON.stringify(cfg, null, 4));
+            console.log('[Auth] JWT Secret baru dibuat dan disimpan ke config.json');
+        }
+    } catch(e) {
+        // Fallback kalau config belum ada (belum setup)
+        JWT_SECRET = JWT_SECRET || crypto.randomBytes(32).toString('hex');
+    }
+}
+loadOrCreateSecret();
+
+function signToken(payload) {
+    const header  = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+    const body    = Buffer.from(JSON.stringify({ ...payload, iat: Date.now() })).toString('base64url');
+    const sig     = crypto.createHmac('sha256', JWT_SECRET).update(header + '.' + body).digest('base64url');
+    return header + '.' + body + '.' + sig;
+}
+
+function verifyToken(token) {
+    try {
+        if (!JWT_SECRET) return null;
+        const [header, body, sig] = token.split('.');
+        if (!header || !body || !sig) return null;
+        const expected = crypto.createHmac('sha256', JWT_SECRET).update(header + '.' + body).digest('base64url');
+        if (sig !== expected) return null;
+        const payload = JSON.parse(Buffer.from(body, 'base64url').toString());
+        // Token expired setelah 24 jam
+        if (Date.now() - payload.iat > 24 * 60 * 60 * 1000) return null;
+        return payload;
+    } catch(e) { return null; }
+}
+
+// ─── RATE LIMITER LOGIN (anti brute force) ─────────────────
+const loginAttempts = new Map(); // ip -> { count, firstAt }
+const MAX_ATTEMPTS  = 5;
+const WINDOW_MS     = 15 * 60 * 1000; // 15 menit
+
+function checkRateLimit(ip) {
+    const now  = Date.now();
+    const data = loginAttempts.get(ip) || { count: 0, firstAt: now };
+    // Reset window kalau sudah lewat 15 menit
+    if (now - data.firstAt > WINDOW_MS) {
+        loginAttempts.set(ip, { count: 1, firstAt: now });
+        return { allowed: true, remaining: MAX_ATTEMPTS - 1 };
+    }
+    if (data.count >= MAX_ATTEMPTS) {
+        const retryAfter = Math.ceil((WINDOW_MS - (now - data.firstAt)) / 60000);
+        return { allowed: false, retryAfter };
+    }
+    data.count++;
+    loginAttempts.set(ip, data);
+    return { allowed: true, remaining: MAX_ATTEMPTS - data.count };
+}
+
+function resetRateLimit(ip) { loginAttempts.delete(ip); }
+
+// ─── MIDDLEWARE AUTH JWT ───────────────────────────────────
+function authMiddleware(req, res, next) {
+    // Endpoint publik — skip auth
+    const publicPaths = ['/api/setup', '/api/login'];
+    if (publicPaths.includes(req.path)) return next();
+    if (!req.path.startsWith('/api/')) return next();
+
+    const authHeader = req.headers['authorization'] || '';
+    const apiKey     = req.headers['x-api-key'] || '';
+
+    // Cek API Key dulu
+    if (apiKey) {
+        const storedKey = process.env.API_KEY || '';
+        if (storedKey && apiKey === storedKey) return next();
+        return res.status(401).json({ success: false, pesan: 'API Key tidak valid.' });
+    }
+
+    // Cek JWT
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    if (!token) return res.status(401).json({ success: false, pesan: 'Tidak terautentikasi.' });
+
+    const payload = verifyToken(token);
+    if (!payload) return res.status(401).json({ success: false, pesan: 'Token tidak valid atau sudah expired.' });
+
+    req.user = payload;
+    next();
+}
+
+app.use(authMiddleware);
 
 const configPath = path.join(__dirname, 'config.json');
 let db;
@@ -97,7 +200,11 @@ app.post('/api/setup', async (req, res) => {
         tempDb.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\``, async (err2) => {
             if (err2) { tempDb.end(); return res.status(500).json({ success: false, pesan: 'Gagal membuat database.' }); }
             tempDb.end();
-            fs.writeFileSync(configPath, JSON.stringify({ host: dbHost, user: dbUser, password: dbPass, database: dbName }, null, 4));
+            // Buat jwt_secret permanen saat setup
+            const jwtSecret = crypto.randomBytes(32).toString('hex');
+            JWT_SECRET = jwtSecret;
+            fs.writeFileSync(configPath, JSON.stringify({ host: dbHost, user: dbUser, password: dbPass, database: dbName, jwt_secret: jwtSecret }, null, 4));
+            console.log('[Setup] JWT Secret dibuat dan disimpan.');
             await initSystem();
             try {
                 const p = db.promise();
@@ -113,17 +220,27 @@ app.post('/api/setup', async (req, res) => {
 
 // ─── LOGIN ─────────────────────────────────────────────────
 app.post('/api/login', (req, res) => {
+    const ip       = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    const rl       = checkRateLimit(ip);
+    if (!rl.allowed) {
+        console.log(`[Auth] Rate limit hit dari ${ip}`);
+        return res.status(429).json({ success: false, pesan: `Terlalu banyak percobaan login. Coba lagi dalam ${rl.retryAfter} menit.` });
+    }
+
     const username = (req.body.username || '').trim();
     const password = (req.body.password || '').trim();
     if (!db) return res.status(500).json({ success: false, pesan: 'Database Error' });
+
     db.query('SELECT * FROM users WHERE username = ?', [username], (err, results) => {
         if (err) return res.status(500).json({ success: false, pesan: 'Database Error' });
         if (results && results.length > 0 && results[0].password === password) {
-            console.log(`[Auth] Login: ${username}`);
-            res.json({ success: true, role: results[0].role, username: results[0].username });
+            resetRateLimit(ip); // Reset counter setelah login sukses
+            const token = signToken({ id: results[0].id, username: results[0].username, role: results[0].role });
+            console.log(`[Auth] Login sukses: ${username} dari ${ip}`);
+            res.json({ success: true, role: results[0].role, username: results[0].username, token });
         } else {
-            console.log(`[Auth] Gagal login: ${username}`);
-            res.status(401).json({ success: false, pesan: 'Username/Password Salah!' });
+            console.log(`[Auth] Gagal login: ${username} dari ${ip} (sisa ${rl.remaining} percobaan)`);
+            res.status(401).json({ success: false, pesan: `Username/Password Salah! Sisa percobaan: ${rl.remaining}` });
         }
     });
 });
@@ -135,7 +252,10 @@ app.get('/api/users', (req, res) =>
 app.post('/api/users', (req, res) => {
     const { username, password, role } = req.body;
     db.query('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', [username, password, role || 'kasir'], (err) => {
-        if (err) return res.status(500).json({ success: false, pesan: 'Username sudah digunakan atau terjadi error.' });
+        if (err) {
+            if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ success: false, pesan: 'Username "' + username + '" sudah digunakan.' });
+            return res.status(500).json({ success: false, pesan: 'Database error: ' + err.message });
+        }
         res.json({ success: true });
     });
 });
