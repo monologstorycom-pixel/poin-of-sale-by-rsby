@@ -7,8 +7,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="style.css?v=1001">
+    <style>
+        .stab-active  { background:#2563eb; color:#fff; box-shadow:0 2px 8px rgba(37,99,235,0.25); }
+        .stab-inactive { background:#f1f5f9; color:#64748b; }
+        .stab-inactive:hover { background:#e2e8f0; color:#334155; }
+        .setting-panel { animation: fadeInUp 0.18s ease both; }
+        @keyframes fadeInUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen overflow-hidden flex flex-col relative">
 
@@ -33,9 +39,12 @@
                     <button onclick="toggleSidebar()" class="md:hidden p-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition active:scale-95 cursor-pointer">
                         <svg class="w-6 h-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                     </button>
-                    <div class="flex flex-col">
-                        <h1 id="headerNamaToko" class="text-lg md:text-xl font-black text-blue-600 tracking-tighter uppercase leading-none truncate">POSweb by Rsby</h1>
-                        <span id="headerAlamatTelp" class="text-[9px] text-slate-400 font-bold mt-1 uppercase tracking-widest leading-tight truncate max-w-[150px] md:max-w-none">Premium Point of Sale System</span>
+                    <div class="flex items-center gap-2.5">
+                        <img id="headerLogoToko" src="" alt="Logo" class="hidden h-9 w-9 rounded-lg object-cover shrink-0 border border-slate-200 shadow-sm">
+                        <div class="flex flex-col">
+                            <h1 id="headerNamaToko" class="text-lg md:text-xl font-black text-blue-600 tracking-tighter uppercase leading-none truncate">POSweb by Rsby</h1>
+                            <span id="headerAlamatTelp" class="text-[9px] text-slate-400 font-bold mt-1 uppercase tracking-widest leading-tight truncate max-w-[150px] md:max-w-none">Premium Point of Sale System</span>
+                        </div>
                     </div>
                     <span id="userInfo" class="bg-blue-50 text-blue-600 border border-blue-200 px-2 py-1 rounded text-[10px] font-bold uppercase h-fit shrink-0 ml-auto md:ml-2">USER</span>
                 </div>
@@ -50,7 +59,7 @@
                     <button id="btnNavKasir"     onclick="showTab('kasir')"     class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Kasir</button>
                     <button id="btnNavGudang"    onclick="showTab('gudang')"    class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Gudang</button>
                     <button id="btnNavLaporan"   onclick="showTab('laporan')"   class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Laporan</button>
-                    <button id="btnNavRetur"     onclick="showTab('retur')"     class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">↩ Retur</button>
+                    <button id="btnNavRetur"     onclick="showTab('retur')"     class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Retur</button>
                     <button id="btnNavSetting"   onclick="showTab('setting')"   class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Setting</button>
                     <div class="mt-auto md:hidden pt-4 border-t border-slate-100 w-full"></div>
                     <button id="btnNavPelanggan" onclick="showTab('pelanggan')" class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Pelanggan WA</button>
@@ -129,7 +138,7 @@
                             <input type="text"   id="addNama"      placeholder="Nama Produk"        class="p-3 border bg-slate-50 rounded-lg font-bold outline-none focus:ring-2 focus:ring-blue-500">
                             <input type="text"   id="addKategori"  placeholder="Kategori"           class="p-3 border bg-slate-50 rounded-lg font-bold outline-none focus:ring-2 focus:ring-blue-500">
                             <div class="flex gap-1">
-                                <input type="number" id="addStok"   placeholder="Stok"   class="p-3 border bg-slate-50 rounded-lg font-bold w-1/2 outline-none focus:ring-2 focus:ring-blue-500">
+                                <input type="number" id="addStok"  placeholder="Stok"   class="p-3 border bg-slate-50 rounded-lg font-bold w-1/2 outline-none focus:ring-2 focus:ring-blue-500">
                                 <input type="text"   id="addSatuan" placeholder="Satuan" class="p-3 border bg-slate-50 rounded-lg font-bold w-1/2 outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                             <input type="number" id="addHargaBeli" placeholder="Harga Beli (Modal)" class="p-3 border bg-slate-50 rounded-lg font-bold outline-none focus:ring-2 focus:ring-blue-500">
@@ -167,7 +176,7 @@
                             <input type="date" id="filterSelesai" class="outline-none text-xs font-bold text-slate-700 bg-transparent" onchange="renderLaporan('harian')">
                         </div>
                         <input type="month" id="filterBulan" class="border rounded-lg px-3 py-1.5 hidden text-xs font-bold outline-none shadow-sm" onchange="renderLaporan('bulanan')">
-                        <button onclick="cetakLaporanPDF()" class="bg-slate-900 text-white font-bold px-4 py-2.5 rounded-lg text-xs transition ml-auto uppercase shadow-md hover:bg-black">🖨️ Cetak PDF</button>
+                        <button onclick="cetakLaporanPDF()" class="bg-slate-900 text-white font-bold px-4 py-2.5 rounded-lg text-xs transition ml-auto uppercase shadow-md hover:bg-black">Cetak PDF</button>
                     </div>
                     <div class="text-center font-black text-slate-800 text-sm uppercase tracking-widest" id="teksFilterLaporan">Memuat Laporan...</div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -215,10 +224,10 @@
                 <!-- PELANGGAN WA -->
                 <div id="tabPelanggan" class="tab-content hidden h-full overflow-y-auto custom-scroll space-y-4 pb-10">
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 flex-wrap">
-                        <h2 class="font-black text-xl tracking-tight text-slate-800">📋 Daftar Pelanggan WA</h2>
+                        <h2 class="font-black text-xl tracking-tight text-slate-800">Daftar Pelanggan WA</h2>
                         <div class="flex gap-2 items-center flex-wrap">
                             <input type="text" id="cariPelangganWA" placeholder="Cari nama / nomor WA..." class="border rounded-lg px-3 py-2 text-xs font-bold outline-none shadow-sm focus:ring-2 focus:ring-green-400 w-56" oninput="filterPelangganWA()">
-                            <button onclick="eksporPelangganWA()" class="bg-green-500 text-white font-bold px-4 py-2 rounded-lg text-xs hover:bg-green-600 transition shadow-sm uppercase">📥 Ekspor CSV</button>
+                            <button onclick="eksporPelangganWA()" class="bg-green-500 text-white font-bold px-4 py-2 rounded-lg text-xs hover:bg-green-600 transition shadow-sm uppercase">Ekspor CSV</button>
                         </div>
                     </div>
                     <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
@@ -236,62 +245,284 @@
                 </div>
 
                 <!-- SETTING -->
-                <div id="tabSetting" class="tab-content hidden h-full overflow-y-auto custom-scroll p-1 md:p-2 pb-10">
-                    <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                        <div class="bg-white p-6 md:p-8 rounded-3xl border shadow-sm h-fit">
-                            <h2 class="font-black text-xl mb-6 tracking-tight text-slate-900 border-b pb-3">Profil Toko</h2>
-                            <div class="space-y-4 text-sm">
-                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-1.5 tracking-widest">Nama Toko</label><input type="text" id="setNamaToko" placeholder="Masukkan nama toko" class="w-full p-3.5 bg-slate-50 border rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition"></div>
-                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-1.5 tracking-widest">Alamat Lengkap</label><textarea id="setAlamat" placeholder="Masukkan alamat toko" rows="3" class="w-full p-3.5 bg-slate-50 border rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition"></textarea></div>
-                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-1.5 tracking-widest">Nomor Telepon / WA</label><input type="text" id="setTelp" placeholder="08xxxxxxxx" class="w-full p-3.5 bg-slate-50 border rounded-xl font-bold outline-none focus:ring-2 focus:ring-blue-500 transition"></div>
-                                <button onclick="simpanPengaturan()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black uppercase tracking-widest shadow-md hover:bg-blue-700 transition active:scale-95 mt-2">Simpan Profil Toko</button>
-                            </div>
+                <div id="tabSetting" class="tab-content hidden h-full overflow-y-auto custom-scroll pb-10">
+
+                    <!-- Sub-tab nav Setting -->
+                    <div class="bg-white border-b sticky top-0 z-10 px-2 md:px-4">
+                        <div class="flex gap-1 overflow-x-auto custom-scroll py-2">
+                            <button onclick="showSettingTab('toko')"    id="stab-toko"    class="setting-stab stab-active    shrink-0 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all">Profil Toko</button>
+                            <button onclick="showSettingTab('printer')" id="stab-printer" class="setting-stab stab-inactive shrink-0 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all">Printer &amp; Struk</button>
+                            <button onclick="showSettingTab('akun')"    id="stab-akun"    id="stab-akun" class="setting-stab stab-inactive shrink-0 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all" style="display:none;" data-permission="pengguna">Manajemen Akun</button>
+                            <button onclick="showSettingTab('backup')"  id="stab-backup"  class="setting-stab stab-inactive shrink-0 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all" style="display:none;" data-permission="backup">Backup &amp; Restore</button>
                         </div>
-                        <div class="bg-white p-6 md:p-8 rounded-3xl border shadow-sm h-fit">
-                            <h2 class="font-black text-xl mb-6 tracking-tight text-slate-900 border-b pb-3">Pengaturan Printer &amp; Struk</h2>
-                            <div class="space-y-4 text-sm">
-                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-1.5 tracking-widest">Ukuran Kertas Printer</label>
-                                    <select id="setUkuranKertas" class="w-full p-3.5 bg-slate-50 border rounded-xl font-bold outline-none focus:ring-2 focus:ring-slate-500 transition cursor-pointer appearance-none">
-                                        <option value="58mm">Printer Thermal 58mm (Kecil)</option>
-                                        <option value="80mm">Printer Thermal 80mm (Lebar)</option>
-                                    </select>
+                    </div>
+
+                    <div class="max-w-2xl mx-auto px-2 md:px-4 pt-5">
+
+                        <!-- ── PROFIL TOKO ── -->
+                        <div id="spanel-toko" class="setting-panel space-y-4">
+
+                            <!-- Logo Toko -->
+                            <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+                                <div class="px-6 py-4 border-b bg-slate-50">
+                                    <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Logo Toko</h3>
+                                    <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Tampil di header aplikasi dan pojok kiri struk cetak</p>
                                 </div>
-                                <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-1.5 tracking-widest">Pesan Footer (Bawah Struk)</label><textarea id="setFooterStruk" placeholder="Misal: Barang yang sudah dibeli tidak dapat ditukar" rows="3" class="w-full p-3.5 bg-slate-50 border rounded-xl font-bold outline-none focus:ring-2 focus:ring-slate-500 transition"></textarea></div>
-                                <div class="bg-blue-50 p-3 rounded-lg border border-blue-100"><p class="text-[9px] font-bold text-blue-600 uppercase tracking-widest leading-relaxed">* Info: Pengaturan printer ini disimpan di memori Browser HP/PC ini saja.</p></div>
-                                <button onclick="simpanPengaturanPrinter()" class="w-full bg-slate-800 text-white py-4 rounded-xl font-black uppercase tracking-widest shadow-md hover:bg-slate-900 transition active:scale-95 mt-2">Simpan Pengaturan Printer</button>
-                            </div>
-                        </div>
-                        <!-- Manajemen Akun -->
-                        <div id="sectionManajemenAkun" class="bg-white p-6 md:p-8 rounded-3xl border shadow-sm h-fit md:col-span-2">
-                            <h2 class="font-black text-xl mb-6 tracking-tight text-slate-900 border-b pb-3">👤 Manajemen Akun</h2>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3 text-xs">
-                                <input type="hidden"   id="addUserId">
-                                <input type="text"     id="addUserUsername" placeholder="Username (Tanpa Spasi)" class="p-3 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-bold transition">
-                                <input type="password" id="addUserPassword" placeholder="Password"               class="p-3 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-bold transition">
-                            </div>
-                            <div class="mb-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Hak Akses Menu</label>
-                                <div class="flex flex-wrap gap-2 text-xs font-bold">
-                                    <label class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-lg border shadow-sm cursor-pointer"><input type="checkbox" value="kasir"    class="akses-cb accent-blue-600" checked disabled> Kasir</label>
-                                    <label class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-lg border shadow-sm cursor-pointer"><input type="checkbox" value="gudang"   class="akses-cb accent-blue-600"> Gudang</label>
-                                    <label class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-lg border shadow-sm cursor-pointer"><input type="checkbox" value="laporan"  class="akses-cb accent-blue-600"> Laporan</label>
-                                    <label class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-lg border shadow-sm cursor-pointer"><input type="checkbox" value="pengguna" class="akses-cb accent-blue-600"> User</label>
-                                    <label class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-lg border shadow-sm cursor-pointer"><input type="checkbox" value="setting"  class="akses-cb accent-blue-600"> Setting</label>
-                                    <label class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-lg border border-blue-200 shadow-sm cursor-pointer bg-blue-50"><input type="checkbox" value="reprint" class="akses-cb accent-blue-600"> 🖨 Reprint</label>
-                                    <label class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-lg border border-orange-200 shadow-sm cursor-pointer bg-orange-50"><input type="checkbox" value="retur"   class="akses-cb accent-orange-500"> ↩ Retur</label>
+                                <div class="p-6">
+                                    <div class="flex items-center gap-5">
+                                        <!-- Preview -->
+                                        <div class="shrink-0 relative">
+                                            <div id="logoPreviewWrap" class="w-24 h-24 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden transition-all">
+                                                <img id="logoPreview" src="" alt="Logo" class="hidden w-full h-full object-contain p-1">
+                                                <div id="logoPlaceholder" class="flex flex-col items-center gap-1 text-slate-300">
+                                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                    <span class="text-[9px] font-bold uppercase tracking-wider">No Logo</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Controls -->
+                                        <div class="flex-grow space-y-3">
+                                            <label class="block cursor-pointer">
+                                                <div class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition active:scale-95 w-fit shadow-md">
+                                                    Pilih Gambar
+                                                </div>
+                                                <input type="file" id="inputLogoToko" accept="image/*" class="hidden" onchange="previewLogo(this)">
+                                            </label>
+                                            <button onclick="simpanLogo()" id="btnSimpanLogo" disabled class="flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-black transition active:scale-95 w-fit shadow-md disabled:opacity-40 disabled:cursor-not-allowed">
+                                                Simpan Logo
+                                            </button>
+                                            <button onclick="hapusLogo()" id="btnHapusLogo" class="hidden flex items-center gap-2 bg-red-50 text-red-600 border border-red-200 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-red-100 transition active:scale-95 w-fit">
+                                                Hapus Logo
+                                            </button>
+                                            <p class="text-[10px] text-slate-400 font-semibold leading-relaxed">Format: JPG, PNG, WEBP. Maks 2MB.<br>Disarankan ukuran persegi, misal 200×200px.</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="flex gap-2 mb-6">
-                                <button id="btnSimpanUser"    onclick="simpanUser()"    class="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold text-xs hover:bg-blue-700 transition shadow-md">Simpan Akun</button>
-                                <button id="btnBatalEditUser" onclick="batalEditUser()" class="bg-red-50 text-red-600 px-6 py-3 rounded-lg font-bold text-xs hidden border border-red-100 hover:bg-red-100 transition">Batal</button>
+
+                            <!-- Identitas Toko -->
+                            <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+                                <div class="px-6 py-4 border-b bg-slate-50">
+                                    <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Identitas Toko</h3>
+                                    <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Tampil di header aplikasi dan pada struk cetak</p>
+                                </div>
+                                <div class="p-6 space-y-4">
+                                    <div>
+                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Nama Toko</label>
+                                        <input type="text" id="setNamaToko" placeholder="Misal: Toko Berkah Jaya" class="w-full p-3 bg-slate-50 border rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Alamat Lengkap</label>
+                                        <textarea id="setAlamat" placeholder="Jl. Contoh No. 1, Kecamatan, Kota" rows="2" class="w-full p-3 bg-slate-50 border rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition resize-none"></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Nomor Telepon / WA</label>
+                                        <input type="text" id="setTelp" placeholder="08xxxxxxxxxx" class="w-full p-3 bg-slate-50 border rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition">
+                                    </div>
+                                    <button onclick="simpanPengaturan()" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-black text-sm uppercase tracking-widest shadow-md hover:bg-blue-700 transition active:scale-95">Simpan Profil Toko</button>
+                                </div>
                             </div>
-                            <div class="bg-white rounded-xl border overflow-hidden">
-                                <table class="w-full text-left text-xs">
-                                    <thead class="bg-slate-50 border-b font-black text-slate-400 text-[10px] uppercase tracking-widest"><tr><th class="p-4">Username</th><th class="p-4">Akses</th><th class="p-4 text-center">Tindakan</th></tr></thead>
-                                    <tbody id="listPengguna" class="divide-y divide-slate-100"></tbody>
-                                </table>
+
+                            <!-- Jam Operasional — tetap di dalam spanel-toko -->
+                            <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+                                <div class="px-6 py-4 border-b bg-slate-50 flex items-center justify-between">
+                                    <div>
+                                        <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Jam Operasional</h3>
+                                        <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Tampil di bawah alamat pada struk cetak</p>
+                                    </div>
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Aktif</span>
+                                        <div class="relative">
+                                            <input type="checkbox" id="jamAktif" class="sr-only peer" onchange="toggleJamAktif()">
+                                            <div class="w-9 h-5 bg-slate-200 peer-checked:bg-blue-600 rounded-full transition-colors"></div>
+                                            <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div id="jamBody" class="p-6 space-y-3 hidden">
+                                    <div id="jamRows" class="space-y-2"></div>
+                                    <div class="pt-2 border-t border-slate-100">
+                                        <p class="text-[10px] text-slate-400 font-semibold mb-2 uppercase tracking-widest">Atur cepat</p>
+                                        <div class="flex flex-wrap gap-2">
+                                            <button onclick="setJamPreset('senin-jumat')" class="text-[10px] font-black text-blue-600 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition uppercase tracking-wider">Sen–Jum</button>
+                                            <button onclick="setJamPreset('senin-sabtu')" class="text-[10px] font-black text-blue-600 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition uppercase tracking-wider">Sen–Sab</button>
+                                            <button onclick="setJamPreset('setiap-hari')" class="text-[10px] font-black text-blue-600 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition uppercase tracking-wider">Setiap Hari</button>
+                                        </div>
+                                    </div>
+                                    <button onclick="simpanJamOperasional()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-black transition active:scale-95 shadow-md mt-2">Simpan Jam Operasional</button>
+                                </div>
+                                <div id="jamNonaktifInfo" class="px-6 py-4 text-[11px] text-slate-400 font-semibold">
+                                    Aktifkan toggle di atas untuk mengatur jam operasional toko.
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- ── PRINTER & STRUK ── -->
+                        <div id="spanel-printer" class="setting-panel space-y-4 hidden">
+                            <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+                                <div class="px-6 py-4 border-b bg-slate-50">
+                                    <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Pengaturan Printer</h3>
+                                    <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Disimpan di browser ini saja — berbeda per perangkat</p>
+                                </div>
+                                <div class="p-6 space-y-4">
+                                    <div>
+                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Ukuran Kertas</label>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <label class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition hover:border-slate-400 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                                                <input type="radio" name="ukuranKertas" value="58mm" class="accent-blue-600">
+                                                <div>
+                                                    <div class="font-black text-sm text-slate-800">58 mm</div>
+                                                    <div class="text-[10px] text-slate-400 font-semibold">Printer kecil</div>
+                                                </div>
+                                            </label>
+                                            <label class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition hover:border-slate-400 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                                                <input type="radio" name="ukuranKertas" value="80mm" class="accent-blue-600">
+                                                <div>
+                                                    <div class="font-black text-sm text-slate-800">80 mm</div>
+                                                    <div class="text-[10px] text-slate-400 font-semibold">Printer lebar</div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                        <!-- Hidden select tetap ada untuk kompatibilitas app.js -->
+                                        <select id="setUkuranKertas" class="hidden">
+                                            <option value="58mm">58mm</option>
+                                            <option value="80mm">80mm</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Pesan Footer Struk</label>
+                                        <textarea id="setFooterStruk" placeholder="Misal: Barang yang sudah dibeli tidak dapat ditukar" rows="2" class="w-full p-3 bg-slate-50 border rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-slate-400 transition resize-none"></textarea>
+                                    </div>
+                                    <button onclick="simpanPengaturanPrinterBaru()" class="w-full bg-slate-900 text-white py-3.5 rounded-xl font-black text-sm uppercase tracking-widest shadow-md hover:bg-black transition active:scale-95">Simpan Pengaturan Printer</button>
+                                </div>
                             </div>
                         </div>
+
+                        <!-- ── MANAJEMEN AKUN ── -->
+                        <div id="spanel-akun" id="sectionManajemenAkun" class="setting-panel space-y-4 hidden">
+                            <!-- Form tambah/edit akun -->
+                            <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+                                <div class="px-6 py-4 border-b bg-slate-50">
+                                    <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Tambah / Edit Akun</h3>
+                                    <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Atur akses kasir dan staff toko</p>
+                                </div>
+                                <div class="p-6 space-y-4">
+                                    <input type="hidden" id="addUserId">
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Username</label>
+                                            <input type="text" id="addUserUsername" placeholder="Tanpa spasi" class="w-full p-3 border rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition bg-slate-50">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Password</label>
+                                            <input type="password" id="addUserPassword" placeholder="Isi untuk ganti" class="w-full p-3 border rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition bg-slate-50">
+                                        </div>
+                                    </div>
+
+                                    <!-- Hak Akses -->
+                                    <div>
+                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Hak Akses Menu</label>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border rounded-xl cursor-pointer hover:bg-slate-100 transition text-xs font-bold opacity-60">
+                                                <input type="checkbox" value="kasir" class="akses-cb accent-blue-600" checked disabled> Kasir <span class="text-[9px] text-slate-400 font-semibold ml-auto">default</span>
+                                            </label>
+                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border rounded-xl cursor-pointer hover:bg-slate-100 transition text-xs font-bold">
+                                                <input type="checkbox" value="gudang" class="akses-cb accent-blue-600"> Gudang
+                                            </label>
+                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border rounded-xl cursor-pointer hover:bg-slate-100 transition text-xs font-bold">
+                                                <input type="checkbox" value="laporan" class="akses-cb accent-blue-600"> Laporan
+                                            </label>
+                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border rounded-xl cursor-pointer hover:bg-slate-100 transition text-xs font-bold">
+                                                <input type="checkbox" value="pengguna" class="akses-cb accent-blue-600"> Manajemen User
+                                            </label>
+                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border rounded-xl cursor-pointer hover:bg-slate-100 transition text-xs font-bold">
+                                                <input type="checkbox" value="setting" class="akses-cb accent-blue-600"> Setting
+                                            </label>
+                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-blue-50 border border-blue-200 rounded-xl cursor-pointer hover:bg-blue-100 transition text-xs font-bold">
+                                                <input type="checkbox" value="reprint" class="akses-cb accent-blue-600"> Cetak Ulang
+                                            </label>
+                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-orange-50 border border-orange-200 rounded-xl cursor-pointer hover:bg-orange-100 transition text-xs font-bold">
+                                                <input type="checkbox" value="retur" class="akses-cb accent-orange-500"> Retur Transaksi
+                                            </label>
+                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-emerald-50 border border-emerald-200 rounded-xl cursor-pointer hover:bg-emerald-100 transition text-xs font-bold">
+                                                <input type="checkbox" value="backup" class="akses-cb accent-emerald-600"> Backup DB
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-2 pt-1">
+                                        <button id="btnSimpanUser" onclick="simpanUser()" class="flex-grow bg-blue-600 text-white py-3 rounded-xl font-black text-sm hover:bg-blue-700 transition shadow-md active:scale-95">Simpan Akun</button>
+                                        <button id="btnBatalEditUser" onclick="batalEditUser()" class="hidden bg-red-50 text-red-600 px-5 py-3 rounded-xl font-bold text-sm border border-red-100 hover:bg-red-100 transition active:scale-95">Batal</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Daftar akun -->
+                            <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+                                <div class="px-6 py-4 border-b bg-slate-50">
+                                    <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Daftar Akun</h3>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left text-xs">
+                                        <thead class="bg-white border-b font-black text-slate-400 text-[10px] uppercase tracking-widest">
+                                            <tr><th class="px-5 py-3">Username</th><th class="px-5 py-3">Akses</th><th class="px-5 py-3 text-center">Aksi</th></tr>
+                                        </thead>
+                                        <tbody id="listPengguna" class="divide-y divide-slate-100"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── BACKUP & RESTORE ── -->
+                        <div id="spanel-backup" id="sectionBackupRestore" class="setting-panel space-y-4 hidden">
+                            <!-- Backup -->
+                            <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+                                <div class="px-6 py-4 border-b bg-slate-50">
+                                    <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Backup Database</h3>
+                                    <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Unduh semua data: produk, transaksi, pengguna, pengaturan</p>
+                                </div>
+                                <div class="p-6">
+                                    <div class="flex items-center justify-between mb-4 bg-slate-50 border rounded-xl p-4">
+                                        <div>
+                                            <div class="font-black text-sm text-slate-800">File Backup (.json)</div>
+                                            <div id="infoBackupTerakhir" class="text-[10px] text-slate-400 font-semibold mt-0.5 hidden"></div>
+                                            <div class="text-[10px] text-slate-400 font-semibold mt-0.5" id="infoBackupBelum">Belum pernah backup di perangkat ini</div>
+                                        </div>
+                                        <button onclick="jalankanBackup()" id="btnBackup" class="shrink-0 bg-slate-900 text-white font-black text-[11px] uppercase tracking-widest py-2.5 px-5 rounded-xl hover:bg-black transition active:scale-95 shadow-md">
+                                            Unduh Backup
+                                        </button>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 font-semibold leading-relaxed">Simpan file backup di tempat aman (Google Drive, email, flash drive). Backup rutin disarankan minimal seminggu sekali.</p>
+                                </div>
+                            </div>
+
+                            <!-- Restore -->
+                            <div class="bg-white rounded-2xl border border-red-100 shadow-sm overflow-hidden">
+                                <div class="px-6 py-4 border-b bg-red-50">
+                                    <h3 class="font-black text-sm text-red-700 uppercase tracking-widest">Restore Database</h3>
+                                    <p class="text-[10px] text-red-400 font-semibold mt-0.5">Semua data aktif akan diganti dengan data dari file backup</p>
+                                </div>
+                                <div class="p-6 space-y-4">
+                                    <label class="block w-full cursor-pointer">
+                                        <div id="dropzoneRestore" class="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:border-red-300 hover:bg-red-50 transition">
+                                            <div class="text-2xl mb-2">📂</div>
+                                            <div id="labelFileRestore" class="text-xs font-black text-slate-500 uppercase tracking-widest">Klik untuk pilih file backup (.json)</div>
+                                            <div class="text-[10px] text-slate-400 font-semibold mt-1">atau drag &amp; drop file ke sini</div>
+                                        </div>
+                                        <input type="file" id="inputFileRestore" accept=".json" class="hidden" onchange="handleFileRestore(this)">
+                                    </label>
+                                    <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                                        <p class="text-[11px] text-amber-700 font-bold leading-relaxed">Peringatan: Restore akan menghapus semua data saat ini secara permanen dan menggantinya dengan data dari file backup. Proses ini tidak dapat dibatalkan.</p>
+                                    </div>
+                                    <button onclick="jalankanRestore()" id="btnRestore" disabled
+                                        class="w-full bg-red-600 text-white font-black text-sm uppercase tracking-widest py-3.5 rounded-xl hover:bg-red-700 transition active:scale-95 shadow-md disabled:opacity-40 disabled:cursor-not-allowed">
+                                        Restore Sekarang
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -331,10 +562,10 @@
             <h3 class="font-black text-xl mb-1">Transaksi Berhasil!</h3>
             <p class="text-xs text-slate-500 mb-5 font-bold">Kembali: <span id="modalKembalian" class="font-black text-green-600 text-base">Rp0</span></p>
             <div class="space-y-2">
-                <button onclick="cetakStrukKasir()" class="w-full bg-slate-100 text-slate-700 font-bold py-3.5 rounded-xl text-sm hover:bg-slate-200 transition active:scale-95">🖨️ Cetak Struk</button>
-                <button onclick="kirimWA()"          class="w-full bg-green-500 text-white   font-bold py-3.5 rounded-xl text-sm hover:bg-green-600 transition shadow-md active:scale-95">💬 Kirim Teks ke WhatsApp</button>
-                <button onclick="downloadPDFStruk()" class="w-full bg-red-500   text-white   font-bold py-3.5 rounded-xl text-sm hover:bg-red-600   transition shadow-md active:scale-95">📄 Download PDF Struk</button>
-                <button onclick="selesaiBayar()"     class="w-full bg-blue-600  text-white   font-black py-3.5 rounded-xl text-sm hover:bg-blue-700  transition mt-2 shadow-md active:scale-95">✅ Selesai</button>
+                <button onclick="cetakStrukKasir()" class="w-full bg-slate-100 text-slate-700 font-bold py-3.5 rounded-xl text-sm hover:bg-slate-200 transition active:scale-95">Cetak Struk</button>
+                <button onclick="unduhStrukPDF()"   class="w-full bg-slate-800 text-white   font-bold py-3.5 rounded-xl text-sm hover:bg-slate-900 transition shadow-md active:scale-95">Unduh PDF Struk</button>
+                <button onclick="kirimWA()"          class="w-full bg-green-500 text-white   font-bold py-3.5 rounded-xl text-sm hover:bg-green-600 transition shadow-md active:scale-95">Kirim ke WhatsApp</button>
+                <button onclick="selesaiBayar()"     class="w-full bg-blue-600  text-white   font-black py-3.5 rounded-xl text-sm hover:bg-blue-700  transition mt-2 shadow-md active:scale-95">Selesai</button>
             </div>
         </div>
     </div>
@@ -350,7 +581,7 @@
 
     <!-- STRUK PRINT -->
     <div id="areaStruk" class="hidden max-w-[58mm] mx-auto text-[10px] font-mono p-1 text-black bg-white leading-tight">
-        <center><b id="strukNamaTokoPrint" class="text-[13px] uppercase"></b><br><span id="strukAlamatTelpPrint" class="text-[9px]"></span><hr class="border-dashed border-black my-1"></center>
+        <center><img id="strukLogoPrint" src="" style="display:none;width:48px;height:48px;object-fit:contain;margin:0 auto 4px;" alt="Logo"><b id="strukNamaTokoPrint" class="text-[13px] uppercase"></b><br><span id="strukAlamatTelpPrint" class="text-[9px]"></span><hr class="border-dashed border-black my-1"><span id="strukJamPrint" class="text-[9px]" style="display:none;"></span></center>
         <div id="strukTanggal" class="text-center text-[9px] mb-1"></div>
         <div id="strukNomor" class="text-center font-bold mb-2 pb-1 border-b border-dashed border-black"></div>
         <table class="w-full mb-1"><tbody id="strukItem"></tbody></table>
@@ -378,18 +609,17 @@
             <p class="text-xs text-slate-400 text-center mb-4 font-medium">Masukkan nomor HP / WA pelanggan</p>
             <div class="relative mb-4">
                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">+62</span>
-                <input type="tel" id="inputNomorWA" placeholder="8xxx xxxx xxxx" inputmode="numeric" pattern="[0-9]*" enterkeyhint="send" class="w-full pl-12 pr-4 py-3.5 border-2 border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:border-green-400 transition text-sm" onkeydown="if(event.key==='Enter'){event.preventDefault();kirimWAKeNomor();}">
+                <input type="tel" id="inputNomorWA" placeholder="8xxx xxxx xxxx" inputmode="numeric" pattern="[0-9]*" enterkeyhint="send"
+                    class="w-full pl-12 pr-4 py-3.5 border-2 border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:border-green-400 transition text-sm"
+                    onkeydown="if(event.key==='Enter'){event.preventDefault();kirimWAKeNomor();}">
             </div>
             <div class="flex gap-2">
                 <button onclick="closeModalWA()" class="w-1/3 bg-slate-100 text-slate-600 font-bold py-3 rounded-xl hover:bg-slate-200 transition text-sm">Batal</button>
-                <button onclick="kirimWAKeNomor()" class="flex-grow bg-green-500 text-white font-bold py-3 rounded-xl hover:bg-green-600 active:scale-95 transition shadow-md text-sm flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.558 4.115 1.528 5.84L.057 23.625a.75.75 0 00.918.918l5.786-1.471A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.885 0-3.65-.52-5.157-1.424l-.37-.22-3.835.975.993-3.733-.242-.385A9.953 9.953 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
-                    Kirim Sekarang
-                </button>
+                <button onclick="kirimWAKeNomor()" class="flex-grow bg-green-500 text-white font-bold py-3 rounded-xl hover:bg-green-600 active:scale-95 transition shadow-md text-sm">Kirim Sekarang</button>
             </div>
         </div>
     </div>
 
-    <script src="app.js?v=1002"></script>
+    <script src="app.js?v=1001"></script>
 </body>
 </html>
