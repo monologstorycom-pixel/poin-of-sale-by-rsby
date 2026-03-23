@@ -85,18 +85,82 @@
             <div class="max-w-[1600px] mx-auto h-full">
 
                 <!-- DASHBOARD -->
-                <div id="tabDashboard" class="tab-content hidden h-full overflow-y-auto custom-scroll space-y-4 px-1">
+                <div id="tabDashboard" class="tab-content hidden h-full overflow-y-auto custom-scroll space-y-4 px-1 pb-10">
+
+                    <!-- Notifikasi Stok Hampir Habis -->
+                    <div id="alertStokHabis" class="hidden">
+                        <div class="bg-red-50 border border-red-200 rounded-2xl p-3">
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                                <span class="text-[10px] font-black text-red-600 uppercase tracking-widest">⚠️ Stok Hampir Habis</span>
+                                <span id="alertStokCount" class="ml-auto bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">0</span>
+                            </div>
+                            <div id="alertStokList" class="flex flex-wrap gap-1.5"></div>
+                        </div>
+                    </div>
+
                     <h2 class="font-black text-xl tracking-tight text-slate-800 mt-2">Dashboard Statistik</h2>
+
+                    <!-- 4 Kartu Utama -->
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div class="bg-white p-3 md:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col"><span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Omzet Hari Ini</span><span id="dashOmzetHariIni" class="text-base md:text-xl font-black text-blue-600 break-all leading-tight">Rp0</span></div>
-                        <div class="bg-white p-3 md:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col"><span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Laba Hari Ini</span><span id="dashLabaHariIni" class="text-base md:text-xl font-black text-green-600 break-all leading-tight">Rp0</span></div>
-                        <div class="bg-white p-3 md:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col"><span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Produk</span><span id="dashTotalProduk" class="text-base md:text-xl font-black text-slate-800">0</span></div>
-                        <div class="bg-white p-3 md:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col"><span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Sisa Stok</span><span id="dashTotalStok" class="text-base md:text-xl font-black text-orange-500">0</span></div>
+                        <div class="bg-white p-3 md:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Omzet Hari Ini</span>
+                            <span id="dashOmzetHariIni" class="text-sm md:text-lg font-black text-blue-600 break-all leading-tight">Rp0</span>
+                            <span id="dashOmzetVsKemarin" class="text-[9px] font-bold mt-1"></span>
+                        </div>
+                        <div class="bg-white p-3 md:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Laba Hari Ini</span>
+                            <span id="dashLabaHariIni" class="text-sm md:text-lg font-black text-green-600 break-all leading-tight">Rp0</span>
+                            <span id="dashTrxHariIni" class="text-[9px] font-bold text-slate-400 mt-1"></span>
+                        </div>
+                        <div class="bg-white p-3 md:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Produk</span>
+                            <span id="dashTotalProduk" class="text-sm md:text-lg font-black text-slate-800">0</span>
+                            <span id="dashProdukDiskon" class="text-[9px] font-bold text-orange-500 mt-1"></span>
+                        </div>
+                        <div class="bg-white p-3 md:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Sisa Stok</span>
+                            <span id="dashTotalStok" class="text-sm md:text-lg font-black text-orange-500">0</span>
+                            <span id="dashStokRendah" class="text-[9px] font-bold text-red-500 mt-1"></span>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-64 md:h-80 pb-10 md:pb-0">
-                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-full"><span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 shrink-0">Trend Omzet (7 Hari)</span><div class="flex-grow relative w-full h-full"><canvas id="chartOmzet"></canvas></div></div>
-                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col h-full"><span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 shrink-0">5 Barang Terlaris</span><div class="flex-grow relative w-full h-full"><canvas id="chartTerlaris"></canvas></div></div>
+
+                    <!-- Grafik Perbandingan Minggu Ini vs Minggu Lalu -->
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest">Perbandingan Omzet</span>
+                            <div class="flex items-center gap-3 text-[9px] font-bold">
+                                <span class="flex items-center gap-1"><span class="inline-block w-3 h-1 rounded bg-blue-500"></span>Minggu Ini</span>
+                                <span class="flex items-center gap-1"><span class="inline-block w-3 h-1 rounded bg-slate-300"></span>Minggu Lalu</span>
+                            </div>
+                        </div>
+                        <div class="relative h-40 md:h-52"><canvas id="chartPerbandingan"></canvas></div>
+                        <div id="ringkasanPerbandingan" class="mt-2 text-[10px] text-slate-500 font-semibold text-center"></div>
                     </div>
+
+                    <!-- Grafik Trend + Terlaris -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 shrink-0">Trend Omzet (7 Hari)</span>
+                            <div class="relative h-40 md:h-52"><canvas id="chartOmzet"></canvas></div>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 shrink-0">5 Barang Terlaris</span>
+                            <div class="relative h-40 md:h-52"><canvas id="chartTerlaris"></canvas></div>
+                        </div>
+                    </div>
+
+                    <!-- Transaksi Terakhir Hari Ini -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="px-4 py-3 border-b bg-slate-50 flex items-center justify-between">
+                            <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest">Transaksi Terakhir Hari Ini</span>
+                            <span id="dashJmlTrx" class="text-[9px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">0 transaksi</span>
+                        </div>
+                        <div id="dashTrxTerakhir" class="divide-y">
+                            <div class="px-4 py-6 text-center text-slate-300 text-xs font-bold italic">Belum ada transaksi hari ini</div>
+                        </div>
+                    </div>
+
                 </div>
 
                 <!-- KASIR -->
@@ -199,12 +263,24 @@
                         <button onclick="cetakLaporanPDF()" class="bg-slate-900 text-white font-bold px-4 py-2.5 rounded-lg text-xs transition ml-auto uppercase shadow-md hover:bg-black">Cetak PDF</button>
                     </div>
                     <div class="text-center font-black text-slate-800 text-sm uppercase tracking-widest" id="teksFilterLaporan">Memuat Laporan...</div>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div class="bg-blue-600  p-5 rounded-2xl text-white shadow-sm text-center"><p class="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">Omzet</p><h1 id="lapOmzet" class="text-2xl font-black truncate">Rp0</h1></div>
-                        <div class="bg-slate-700 p-5 rounded-2xl text-white shadow-sm text-center"><p class="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">Modal</p><h1 id="lapModal" class="text-2xl font-black truncate">Rp0</h1></div>
-                        <div class="bg-green-600 p-5 rounded-2xl text-white shadow-sm text-center"><p class="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">Laba Bersih</p><h1 id="lapLaba" class="text-2xl font-black truncate">Rp0</h1></div>
-                        <div class="bg-blue-800 p-5 rounded-2xl text-white shadow-sm text-center"><p class="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">Total PPN</p><h1 id="lapPPN" class="text-2xl font-black truncate">-</h1></div>
-                        <div id="cardPPN" class="hidden bg-violet-600 p-5 rounded-2xl text-white shadow-sm text-center md:col-span-3"><p class="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">Total PPN Terkumpul</p><h1 id="lapPPN" class="text-2xl font-black truncate">Rp0</h1></div>
+                    <!-- Grid kartu: 3 kolom default, jadi 2x2 kalau PPN aktif -->
+                    <div id="gridKartuLaporan" class="grid grid-cols-3 md:grid-cols-3 gap-2 md:gap-3">
+                        <div class="bg-blue-600 p-3 md:p-4 rounded-2xl text-white shadow-sm text-center flex flex-col justify-center min-h-[72px]">
+                            <p class="text-[9px] font-bold opacity-70 uppercase tracking-widest mb-1">Omzet</p>
+                            <p id="lapOmzet" class="text-xs md:text-sm font-black leading-tight">Rp0</p>
+                        </div>
+                        <div class="bg-slate-700 p-3 md:p-4 rounded-2xl text-white shadow-sm text-center flex flex-col justify-center min-h-[72px]">
+                            <p class="text-[9px] font-bold opacity-70 uppercase tracking-widest mb-1">Modal</p>
+                            <p id="lapModal" class="text-xs md:text-sm font-black leading-tight">Rp0</p>
+                        </div>
+                        <div class="bg-green-600 p-3 md:p-4 rounded-2xl text-white shadow-sm text-center flex flex-col justify-center min-h-[72px]">
+                            <p class="text-[9px] font-bold opacity-70 uppercase tracking-widest mb-1">Laba Bersih</p>
+                            <p id="lapLaba" class="text-xs md:text-sm font-black leading-tight">Rp0</p>
+                        </div>
+                        <div id="cardPPN" class="hidden bg-blue-800 p-3 md:p-4 rounded-2xl text-white shadow-sm text-center flex flex-col justify-center min-h-[72px]">
+                            <p class="text-[9px] font-bold opacity-70 uppercase tracking-widest mb-1">Total PPN</p>
+                            <p id="lapPPN" class="text-xs md:text-sm font-black leading-tight">-</p>
+                        </div>
                     </div>
                     <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
                         <div id="areaCariStruk" class="p-3 border-b bg-slate-50"><input type="text" id="cariStruk" placeholder="Cari No Struk..." class="w-full p-2.5 text-sm rounded-lg border outline-none focus:ring-2 focus:ring-blue-400" oninput="pencarianStruk()"></div>
@@ -804,6 +880,7 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="app.js?v=1001"></script>
 </body>
 </html>
