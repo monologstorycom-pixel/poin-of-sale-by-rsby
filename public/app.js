@@ -22,6 +22,9 @@ var semuaTransaksi     = [];
 var dataTampilLaporan  = [];
 var memoriRevisi       = {};
 var confirmCallback    = null;
+var authToken          = '';      // JWT token
+var idleTimer          = null;    // auto logout timer
+var IDLE_TIMEOUT_MS    = 30 * 60 * 1000; // 30 menit idle → logout
 var restoreFileData    = null;
 var diskonGlobalPct    = 0;      // persen diskon global dari setting
 var diskonGlobalAktif  = false;  // toggle diskon global di kasir
@@ -46,6 +49,41 @@ function safeStr(val) {
 function safeAttr(val) {
     if (val === null || val === undefined) return '';
     return String(val).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+// ─── FETCH DENGAN AUTH TOKEN ──────────────────────────────
+function fetchAuth(url, options = {}) {
+    const token = authToken || localStorage.getItem('authToken') || '';
+    const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    return fetch(url, { ...options, headers }).then(res => {
+        if (res.status === 401 && !url.includes('/api/login') && authToken) {
+            // Token expired — paksa logout (tapi tidak kalau sedang proses login)
+            showAlert('Sesi Berakhir', 'Sesi kamu telah berakhir. Silakan login kembali.', 'error');
+            setTimeout(() => forceLogout(), 1500);
+        }
+        return res;
+    });
+}
+
+// ─── AUTO LOGOUT IDLE ─────────────────────────────────────
+function startIdleTimer() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+        showAlert('Sesi Berakhir', 'Kamu tidak aktif selama 30 menit. Silakan login kembali.', 'error');
+        setTimeout(() => forceLogout(), 2000);
+    }, IDLE_TIMEOUT_MS);
+}
+
+function resetIdleTimer() { if (authToken) startIdleTimer(); }
+
+function forceLogout() {
+    authToken = '';
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userUsername');
+    clearTimeout(idleTimer);
+    location.reload();
 }
 
 const formatRupiah = (a) =>
@@ -159,6 +197,8 @@ function pilihMetode(m) {
 
 // ─── AUTH ──────────────────────────────────────────────────
 function checkAuth() {
+    // Pastikan authToken selalu tersync dari localStorage
+    authToken = authToken || localStorage.getItem('authToken') || '';
     try {
         const role = localStorage.getItem('userRole') || '';
         const name = localStorage.getItem('userName') || '';
@@ -229,12 +269,19 @@ async function login() {
     if (!u || !p) return showAlert('Perhatian', 'Username dan Password wajib diisi!', 'error');
     btn.innerText = 'MEMPROSES...'; btn.disabled = true; btn.classList.add('opacity-50');
     try {
-        const res = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, password: p }) });
+        const res = await fetchAuth('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, password: p }) });
         const d = await res.json();
         if (res.ok && d.success) {
-            localStorage.setItem('userRole', d.role || 'kasir');
-            localStorage.setItem('userName', d.username || u);
+            // Simpan token DULU sebelum apapun
+            if (d.token) {
+                authToken = d.token;
+                localStorage.setItem('authToken', d.token);
+            }
+            localStorage.setItem('userRole',     d.role     || 'kasir');
+            localStorage.setItem('userUsername', d.username || u);
+            localStorage.setItem('userName',     d.username || u);
             document.getElementById('inputPass').value = '';
+            startIdleTimer();
             checkAuth();
         } else { showAlert('Akses Ditolak', d.pesan || 'Username atau Password salah.', 'error'); }
     } catch { showAlert('Koneksi Gagal', 'Tidak dapat terhubung ke server.', 'error'); }
@@ -274,7 +321,7 @@ function showTab(t) {
 // ─── GUDANG ────────────────────────────────────────────────
 async function loadBarang() {
     try {
-        const res = await fetch('/api/produk');
+        const res = await fetchAuth('/api/produk');
         const d   = await res.json();
         const arr = Array.isArray(d) ? d : [];
         let html  = '';
@@ -323,7 +370,7 @@ async function autoNextBarcode() {
     const el = document.getElementById('addBarcode');
     if (!el || isEditMode) return;
     try {
-        const res  = await fetch('/api/produk');
+        const res  = await fetchAuth('/api/produk');
         const data = await res.json();
         const arr  = Array.isArray(data) ? data : [];
         const nums = arr
@@ -370,7 +417,7 @@ async function hapusBarang(b) {
 // ─── KASIR ─────────────────────────────────────────────────
 async function loadKatalogKasir() {
     try {
-        const res = await fetch('/api/produk');
+        const res = await fetchAuth('/api/produk');
         const d   = await res.json();
         dataKatalog = Array.isArray(d) ? d : [];
 
@@ -555,7 +602,7 @@ async function prosesBayar() {
     if (metodeBayarActive === 'Tunai' && b < total) return showAlert('Pembayaran Gagal', 'Uang tunai kurang.', 'error');
     const no = prefixStruk + '-' + Date.now(); const kasir = localStorage.getItem('userName') || 'Admin';
     try {
-        const res = await fetch('/api/transaksi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ no_struk: no, total_bayar: total, total_modal: totalModal, diskon_nominal: diskonGlobalNominal, ppn_nominal: ppnNominal, ppn_mode: ppnMode, keranjang, kasir, metode_bayar: metodeBayarActive }) });
+        const res = await fetchAuth('/api/transaksi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ no_struk: no, total_bayar: total, total_modal: totalModal, diskon_nominal: diskonGlobalNominal, ppn_nominal: ppnNominal, ppn_mode: ppnMode, keranjang, kasir, metode_bayar: metodeBayarActive }) });
         if (!res.ok) throw new Error('Server error');
         document.getElementById('strukTanggal').innerText   = new Date().toLocaleString('id-ID');
         document.getElementById('strukNomor').innerText     = no;
@@ -631,7 +678,7 @@ function kirimWAKeNomor() {
     if (nomor.startsWith('0')) nomor = '62' + nomor.slice(1);
     else if (!nomor.startsWith('62')) nomor = '62' + nomor;
     if (lastTrxData.id_transaksi) {
-        fetch('/api/transaksi/wa/' + lastTrxData.id_transaksi, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ wa_pelanggan: nomor }) }).catch(() => {});
+        fetchAuth('/api/transaksi/wa/' + lastTrxData.id_transaksi, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ wa_pelanggan: nomor }) }).catch(() => {});
     }
     let t = '';
     t += '*' + (profilToko.nama_toko || 'Toko') + '*\n';
@@ -659,7 +706,7 @@ function selesaiBayar() {
 // ─── DASHBOARD ─────────────────────────────────────────────
 async function loadDashboard() {
     try {
-        const [resTx, resPr, resTr] = await Promise.all([fetch('/api/transaksi'), fetch('/api/produk'), fetch('/api/terlaris')]);
+        const [resTx, resPr, resTr] = await Promise.all([fetchAuth('/api/transaksi'), fetchAuth('/api/produk'), fetchAuth('/api/terlaris')]);
         const [txData, prData, trData] = await Promise.all([resTx.json(), resPr.json(), resTr.json()]);
         const allTx = Array.isArray(txData) ? txData : [];
         const allPr = Array.isArray(prData) ? prData : [];
@@ -853,7 +900,7 @@ function showSettingTab(name) {
 
 async function loadPengaturan() {
     try {
-        const res = await fetch('/api/pengaturan'); const d = await res.json();
+        const res = await fetchAuth('/api/pengaturan'); const d = await res.json();
         if (d) {
             profilToko = d;
             document.getElementById('setNamaToko').value  = d.nama_toko   || '';
@@ -920,7 +967,7 @@ async function loadPengaturan() {
 
 async function loadLogo() {
     try {
-        const res  = await fetch('/api/pengaturan/logo');
+        const res  = await fetchAuth('/api/pengaturan/logo');
         const data = await res.json();
         applyLogo(data.logo_toko || null);
     } catch(e) { console.error('loadLogo error', e); }
@@ -992,7 +1039,7 @@ async function simpanLogo() {
     btnSimpan.disabled = true;
     btnSimpan.innerText = 'MENYIMPAN...';
     try {
-        const res = await fetch('/api/pengaturan/logo', {
+        const res = await fetchAuth('/api/pengaturan/logo', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ logo_toko: base64 })
@@ -1021,7 +1068,7 @@ async function simpanLogo() {
 async function hapusLogo() {
     showConfirm('Hapus Logo?', 'Logo toko akan dihapus. Lanjutkan?', async () => {
         try {
-            await fetch('/api/pengaturan/logo', { method: 'DELETE' });
+            await fetchAuth('/api/pengaturan/logo', { method: 'DELETE' });
             applyLogo(null);
             // Reset file input dan tombol simpan
             const inputEl   = document.getElementById('inputLogoToko');
@@ -1052,7 +1099,7 @@ function jamDefault() {
 
 async function loadJamOperasional() {
     try {
-        var res  = await fetch('/api/pengaturan/jam');
+        var res  = await fetchAuth('/api/pengaturan/jam');
         if (!res.ok) throw new Error('HTTP ' + res.status);
         var data = await res.json();
         if (data.jam_operasional) {
@@ -1179,7 +1226,7 @@ async function simpanJamOperasional() {
 
     try {
         var bodyStr = JSON.stringify({ jam_operasional: JSON.stringify(payload) });
-        var res = await fetch('/api/pengaturan/jam', {
+        var res = await fetchAuth('/api/pengaturan/jam', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: bodyStr
@@ -1248,7 +1295,7 @@ async function simpanPengaturan() {
         diskon_global:      parseFloat(document.getElementById('setDiskonGlobal')?.value) || 0,
         diskon_global_aktif: document.getElementById('setDiskonGlobalAktif')?.checked ? 1 : 0
     };
-    try { await fetch('/api/pengaturan', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) }); showAlert('Sukses', 'Profil Toko tersimpan.', 'success'); loadPengaturan(); }
+    try { await fetchAuth('/api/pengaturan', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) }); showAlert('Sukses', 'Profil Toko tersimpan.', 'success'); loadPengaturan(); }
     catch { showAlert('Gagal', 'Gagal menyimpan pengaturan.', 'error'); }
 }
 
@@ -1271,7 +1318,7 @@ function simpanPengaturanPrinterBaru() { simpanPengaturanPrinter(); }
 
 // ─── LAPORAN ───────────────────────────────────────────────
 async function loadDataLaporan() {
-    try { const res = await fetch('/api/transaksi'); const d = await res.json(); semuaTransaksi = Array.isArray(d) ? d : []; renderLaporan(currentLaporanType || 'harian'); }
+    try { const res = await fetchAuth('/api/transaksi'); const d = await res.json(); semuaTransaksi = Array.isArray(d) ? d : []; renderLaporan(currentLaporanType || 'harian'); }
     catch { semuaTransaksi = []; renderLaporan('harian'); }
 }
 
@@ -1371,7 +1418,7 @@ function hasPermission(p) {
 // ─── AUDIT MODAL ───────────────────────────────────────────
 async function lihatDetailStruk(id, no, tgl, tot, kas, metode) {
     try {
-        const res = await fetch('/api/transaksi/detail/' + id);
+        const res = await fetchAuth('/api/transaksi/detail/' + id);
         const d   = await res.json();
         memoriRevisi = { id, no, tanggal: tgl, total: tot, kasir: kas, metode, items: d };
         let h = `<div class="mb-3 text-center border-b pb-3"><div class="font-black text-sm uppercase text-slate-800">${safeStr(profilToko.nama_toko||'')}</div><div class="text-[9px] font-bold text-slate-400 mt-1">${new Date(tgl).toLocaleString('id-ID')}</div><div class="text-[10px] bg-blue-50 text-blue-600 inline-block px-2 py-0.5 rounded font-mono font-bold mt-1 border border-blue-100">${no}</div><div class="text-[9px] font-bold text-slate-500 mt-1 uppercase">Kasir: ${safeStr(kas)} • ${safeStr(metode)}</div></div><table class="w-full text-xs mb-3"><tbody class="divide-y divide-slate-100 border-t border-b">`;
@@ -1393,7 +1440,7 @@ async function returKeKasir() {
     tutupModalStruk();
     showConfirm('Retur Transaksi?', `Struk ${memoriRevisi.no} akan di-void. Item-itemnya otomatis masuk ke keranjang kasir.`, async () => {
         try {
-            const delRes = await fetch('/api/transaksi/' + memoriRevisi.id, { method: 'DELETE' });
+            const delRes = await fetchAuth('/api/transaksi/' + memoriRevisi.id, { method: 'DELETE' });
             if (!delRes.ok) throw new Error('Gagal void transaksi');
             await loadKatalogKasir();
             keranjang = []; total = 0; totalModal = 0; diskonGlobalNominal = 0; ppnNominal = 0;
@@ -1419,7 +1466,7 @@ async function loadTabRetur() {
     try {
         const inputTgl = document.getElementById('filterReturTgl');
         if (inputTgl && !inputTgl.value) inputTgl.value = new Date().toISOString().split('T')[0];
-        const res  = await fetch('/api/transaksi');
+        const res  = await fetchAuth('/api/transaksi');
         const data = await res.json();
         dataTabRetur = Array.isArray(data) ? data : [];
         filterTabRetur();
@@ -1461,7 +1508,7 @@ function renderTabRetur(data) {
 
 async function langungReprint(id, no, tgl, tot, kas, metode) {
     try {
-        const res = await fetch('/api/transaksi/detail/' + id);
+        const res = await fetchAuth('/api/transaksi/detail/' + id);
         const d   = await res.json();
         cetakUlangStruk({ no, tanggal: new Date(tgl).toLocaleString('id-ID'), kasir: kas, metode, total: tot, items: d });
     } catch { showAlert('Error', 'Gagal memuat data struk.', 'error'); }
@@ -1469,12 +1516,12 @@ async function langungReprint(id, no, tgl, tot, kas, metode) {
 
 async function langsungRetur(id, no, tgl, tot, kas, metode) {
     try {
-        const res = await fetch('/api/transaksi/detail/' + id);
+        const res = await fetchAuth('/api/transaksi/detail/' + id);
         const d   = await res.json();
         memoriRevisi = { id, no, tanggal: tgl, total: tot, kasir: kas, metode, items: d };
         showConfirm('Retur Transaksi?', `Struk ${no} akan di-void. Item-itemnya otomatis masuk ke keranjang kasir.`, async () => {
             try {
-                const delRes = await fetch('/api/transaksi/' + id, { method: 'DELETE' });
+                const delRes = await fetchAuth('/api/transaksi/' + id, { method: 'DELETE' });
                 if (!delRes.ok) throw new Error('Gagal void transaksi');
                 await loadKatalogKasir();
                 keranjang = []; total = 0; totalModal = 0; diskonGlobalNominal = 0; ppnNominal = 0;
@@ -1596,7 +1643,7 @@ function cetakLaporanPDF() {
 // ─── PENGGUNA ──────────────────────────────────────────────
 async function loadUsers() {
     try {
-        const res = await fetch('/api/users'); const d = await res.json();
+        const res = await fetchAuth('/api/users'); const d = await res.json();
         document.getElementById('listPengguna').innerHTML = (Array.isArray(d)?d:[]).map(u => `
           <tr class="border-b hover:bg-slate-50 transition">
             <td class="p-4 font-bold text-slate-800">${safeStr(u.username)}</td>
@@ -1643,7 +1690,7 @@ async function hapusUser(id, name) {
     if (name === localStorage.getItem('userName')) return showAlert('Ditolak', 'Tidak bisa menghapus akun sendiri.', 'error');
     if (name === 'owner') return showAlert('Ditolak', 'Akun owner tidak bisa dihapus.', 'error');
     showConfirm('Hapus Akun?', `Cabut akses untuk "${name}"?`, async () => {
-        try { await fetch('/api/users/'+id,{method:'DELETE'}); loadUsers(); showAlert('Terhapus','Akun berhasil dihapus.','success'); }
+        try { await fetchAuth('/api/users/'+id,{method:'DELETE'}); loadUsers(); showAlert('Terhapus','Akun berhasil dihapus.','success'); }
         catch { }
     });
 }
@@ -1653,7 +1700,7 @@ var dataPelangganWA = [];
 
 async function loadPelangganWA() {
     try {
-        const res  = await fetch('/api/pelanggan-wa');
+        const res  = await fetchAuth('/api/pelanggan-wa');
         const data = await res.json();
         dataPelangganWA = Array.isArray(data) ? data : [];
         filterPelangganWA();
@@ -1805,7 +1852,7 @@ async function simpanPengaturanTransaksi() {
         ppn_mode:           (document.querySelector('input[name="ppnMode"]:checked')?.value || 'eksklusif')
     };
     try {
-        const res = await fetch('/api/pengaturan', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) });
+        const res = await fetchAuth('/api/pengaturan', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) });
         if (res.ok) {
             prefixStruk       = prefix;
             diskonGlobalPct   = diskonPct;
@@ -1843,7 +1890,7 @@ async function jalankanBackup() {
     const btn = document.getElementById('btnBackup');
     if (btn) { btn.innerText = 'MEMPROSES...'; btn.disabled = true; btn.classList.add('opacity-50'); }
     try {
-        const res = await fetch('/api/backup');
+        const res = await fetchAuth('/api/backup');
         if (!res.ok) throw new Error('Gagal mengambil data backup');
         const disposition = res.headers.get('Content-Disposition') || '';
         const match = disposition.match(/filename="?([^"]+)"?/);
@@ -1898,7 +1945,7 @@ async function jalankanRestore() {
             const btn = document.getElementById('btnRestore');
             if (btn) { btn.innerText = 'MEMPROSES...'; btn.disabled = true; btn.classList.add('opacity-50'); }
             try {
-                const res = await fetch('/api/restore', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ backup: restoreFileData }) });
+                const res = await fetchAuth('/api/restore', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ backup: restoreFileData }) });
                 const d = await res.json();
                 if (res.ok && d.success) {
                     showAlert('Restore Berhasil', 'Data berhasil dipulihkan. Halaman akan dimuat ulang...', 'success');
@@ -2082,7 +2129,7 @@ function unduhStrukPDFDariData(data) { _doUnduhPDF(data); }
 
 async function langungUnduhPDF(id, no, tgl, tot, kas, metode) {
     try {
-        var res   = await fetch('/api/transaksi/detail/' + id);
+        var res   = await fetchAuth('/api/transaksi/detail/' + id);
         var items = await res.json();
         _doUnduhPDF({ no: no, tanggal: new Date(tgl).toLocaleString('id-ID'), kasir: kas, metode: metode, total: tot, bayar: tot, items: items });
     } catch(e) { showAlert('Error', 'Gagal memuat data struk.', 'error'); }
@@ -2225,6 +2272,10 @@ function _doUnduhPDF(data) {
 }
 
 window.onload = function () {
+    // Reset idle timer setiap ada aktivitas user
+    ['mousemove','keydown','touchstart','click','scroll'].forEach(function(ev) {
+        document.addEventListener(ev, resetIdleTimer, { passive: true });
+    });
     loadTema();
     document.getElementById('btnConfirmOk').onclick = function () {
         const cb = confirmCallback;
