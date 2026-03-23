@@ -6,7 +6,7 @@ const fs      = require('fs');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
 const configPath = path.join(__dirname, 'config.json');
 let db;
@@ -58,9 +58,9 @@ async function initSystem() {
         ];
         for (let q of alters) { try { await p.query(q); } catch(e) {} }
 
-        // Migrasi: normalisasi semua kategori ke uppercase sekali jalan
         try { await p.query('UPDATE produk SET kategori = UPPER(kategori) WHERE kategori != UPPER(kategori)'); } catch(e) {}
-        // Migrasi: tambah kolom wa_pelanggan jika belum ada
+        try { await p.query('ALTER TABLE pengaturan ADD COLUMN logo_toko MEDIUMTEXT DEFAULT NULL'); } catch(e) {}
+        try { await p.query("ALTER TABLE pengaturan ADD COLUMN jam_operasional TEXT DEFAULT NULL"); } catch(e) {}
         try { await p.query('ALTER TABLE transaksi ADD COLUMN wa_pelanggan VARCHAR(20) DEFAULT NULL AFTER metode_bayar'); } catch(e) {}
 
         isSystemReady = true;
@@ -89,7 +89,7 @@ app.post('/api/setup', async (req, res) => {
             await initSystem();
             try {
                 const p = db.promise();
-                const roleAll = 'dashboard,kasir,gudang,laporan,pengguna,setting';
+                const roleAll = 'dashboard,kasir,gudang,laporan,pengguna,setting,reprint,retur,backup';
                 await p.query(`INSERT INTO users (username,password,role) VALUES (?,?,?) ON DUPLICATE KEY UPDATE password=?,role=?`, [ownerUser, ownerPass, roleAll, ownerPass, roleAll]);
                 await p.query(`INSERT INTO pengaturan (id,nama_toko,alamat_toko,telp_toko) VALUES (1,?,?,?) ON DUPLICATE KEY UPDATE nama_toko=?,alamat_toko=?,telp_toko=?`, [tokoNama, tokoAlamat||'', tokoTelp||'', tokoNama, tokoAlamat||'', tokoTelp||'']);
                 console.log(`[POSweb] Setup selesai → User: ${ownerUser}`);
@@ -107,10 +107,10 @@ app.post('/api/login', (req, res) => {
     db.query('SELECT * FROM users WHERE username = ?', [username], (err, results) => {
         if (err) return res.status(500).json({ success: false, pesan: 'Database Error' });
         if (results && results.length > 0 && results[0].password === password) {
-            console.log(`[Auth] ✅ Login: ${username}`);
+            console.log(`[Auth] Login: ${username}`);
             res.json({ success: true, role: results[0].role, username: results[0].username });
         } else {
-            console.log(`[Auth] ❌ Gagal login: ${username}`);
+            console.log(`[Auth] Gagal login: ${username}`);
             res.status(401).json({ success: false, pesan: 'Username/Password Salah!' });
         }
     });
@@ -120,8 +120,6 @@ app.post('/api/login', (req, res) => {
 app.get('/api/users', (req, res) =>
     db.query('SELECT id, username, role FROM users ORDER BY id ASC', (err, results) => res.json(results || [])));
 
-// FIX #6: kembalikan HTTP 500 yang benar saat username duplikat
-// sehingga frontend bisa cek res.ok dengan benar
 app.post('/api/users', (req, res) => {
     const { username, password, role } = req.body;
     db.query('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', [username, password, role || 'kasir'], (err) => {
@@ -141,7 +139,49 @@ app.delete('/api/users/:id', (req, res) =>
 
 // ─── PENGATURAN ────────────────────────────────────────────
 app.get('/api/pengaturan', (req, res) =>
-    db.query('SELECT * FROM pengaturan WHERE id=1', (err, results) => res.json(results ? results[0] : {})));
+    db.query('SELECT id, nama_toko, alamat_toko, telp_toko FROM pengaturan WHERE id=1', (err, results) => res.json(results ? results[0] : {})));
+
+// Logo terpisah — base64 bisa besar, jangan ikut response pengaturan utama
+app.get('/api/pengaturan/logo', (req, res) =>
+    db.query('SELECT logo_toko FROM pengaturan WHERE id=1', (err, results) => {
+        if (err || !results || !results[0]) return res.json({ logo_toko: null });
+        res.json({ logo_toko: results[0].logo_toko || null });
+    }));
+
+app.put('/api/pengaturan/logo', (req, res) => {
+    const { logo_toko } = req.body;
+    db.query(
+        'INSERT INTO pengaturan (id, logo_toko) VALUES (1, ?) ON DUPLICATE KEY UPDATE logo_toko=?',
+        [logo_toko, logo_toko],
+        (err) => {
+            if (err) return res.status(500).json({ success: false, pesan: err.message });
+            res.json({ success: true });
+        }
+    );
+});
+
+app.delete('/api/pengaturan/logo', (req, res) =>
+    db.query('UPDATE pengaturan SET logo_toko=NULL WHERE id=1', () => res.json({ success: true })));
+
+// ─── JAM OPERASIONAL ──────────────────────────────────────
+app.get('/api/pengaturan/jam', (req, res) =>
+    db.query('SELECT jam_operasional FROM pengaturan WHERE id=1', (err, results) => {
+        if (err || !results || !results[0]) return res.json({ jam_operasional: null });
+        res.json({ jam_operasional: results[0].jam_operasional || null });
+    }));
+
+app.put('/api/pengaturan/jam', (req, res) => {
+    const { jam_operasional } = req.body;
+    const jamStr = typeof jam_operasional === 'string' ? jam_operasional : JSON.stringify(jam_operasional);
+    db.query(
+        'INSERT INTO pengaturan (id, jam_operasional) VALUES (1, ?) ON DUPLICATE KEY UPDATE jam_operasional=?',
+        [jamStr, jamStr],
+        (err) => {
+            if (err) return res.status(500).json({ success: false, pesan: err.message });
+            res.json({ success: true });
+        }
+    );
+});
 
 app.put('/api/pengaturan', (req, res) => {
     const { nama_toko, alamat_toko, telp_toko } = req.body;
@@ -225,7 +265,6 @@ app.delete('/api/transaksi/:id', (req, res) => {
     });
 });
 
-// Simpan nomor WA pelanggan ke transaksi
 app.put('/api/transaksi/wa/:id', (req, res) => {
     const { wa_pelanggan } = req.body;
     if (!wa_pelanggan) return res.status(400).json({ success: false, pesan: 'Nomor WA wajib diisi.' });
@@ -235,7 +274,6 @@ app.put('/api/transaksi/wa/:id', (req, res) => {
     });
 });
 
-// Daftar nomor WA pelanggan (hanya untuk super admin/owner)
 app.get('/api/pelanggan-wa', (req, res) => {
     db.query(
         `SELECT t.id, t.no_struk, t.tanggal, t.total_bayar, t.kasir, t.metode_bayar, t.wa_pelanggan
@@ -249,6 +287,113 @@ app.get('/api/pelanggan-wa', (req, res) => {
 app.get('/api/terlaris', (req, res) =>
     db.query('SELECT nama_barang, SUM(qty) as total_qty FROM detail_transaksi GROUP BY barcode,nama_barang ORDER BY total_qty DESC LIMIT 5', (err, results) => res.json(results || [])));
 
+// ─── BACKUP DATABASE ───────────────────────────────────────
+app.get('/api/backup', async (req, res) => {
+    try {
+        const p = db.promise();
+        const cfg = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        const backup = {
+            meta: {
+                versi: '1.0',
+                aplikasi: 'POSweb by Rsby',
+                waktu_backup: new Date().toISOString(),
+                database: cfg.database
+            },
+            data: {}
+        };
+
+        const tables = ['pengaturan', 'users', 'produk', 'transaksi', 'detail_transaksi'];
+        for (const tbl of tables) {
+            const [rows] = await p.query(`SELECT * FROM \`${tbl}\``);
+            backup.data[tbl] = rows;
+        }
+
+        const ts       = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        const filename = `posweb-backup-${ts}.json`;
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(JSON.stringify(backup, null, 2));
+        console.log(`[POSweb] Backup berhasil: ${filename}`);
+    } catch (err) {
+        console.error('[Backup Error]', err);
+        res.status(500).json({ success: false, pesan: 'Gagal membuat backup: ' + err.message });
+    }
+});
+
+// ─── RESTORE DATABASE ──────────────────────────────────────
+
+// Helper: konversi ISO string / Date object ke format MySQL DATETIME
+// "2026-03-22T06:45:37.000Z" → "2026-03-22 06:45:37"
+function toMysqlDatetime(val) {
+    if (val === null || val === undefined) return null;
+    const s = String(val);
+    // Sudah format MySQL: "2026-03-22 06:45:37"
+    if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(s)) return s.slice(0, 19);
+    // ISO format: "2026-03-22T06:45:37.000Z" atau "2026-03-22T06:45:37Z"
+    if (/^\d{4}-\d{2}-\d{2}T/.test(s)) {
+        const d = new Date(s);
+        if (!isNaN(d.getTime())) {
+            // Simpan dalam UTC agar konsisten
+            return d.toISOString().replace('T', ' ').slice(0, 19);
+        }
+    }
+    return val;
+}
+
+// Kolom-kolom bertipe TIMESTAMP/DATETIME di tiap tabel
+const DATETIME_COLS = {
+    transaksi: ['tanggal']
+};
+
+app.post('/api/restore', async (req, res) => {
+    const { backup } = req.body;
+    if (!backup || !backup.meta || !backup.data) {
+        return res.status(400).json({ success: false, pesan: 'File backup tidak valid atau rusak.' });
+    }
+    try {
+        const p = db.promise();
+        const order = ['detail_transaksi', 'transaksi', 'produk', 'users', 'pengaturan'];
+
+        await p.query('SET FOREIGN_KEY_CHECKS = 0');
+        // Izinkan insert nilai datetime apapun tanpa strict mode
+        await p.query("SET SESSION sql_mode = ''");
+
+        for (const tbl of order) {
+            const rows = backup.data[tbl];
+            await p.query(`TRUNCATE TABLE \`${tbl}\``);
+            if (!rows || !rows.length) continue;
+
+            const keys = Object.keys(rows[0]);
+            const dtCols = DATETIME_COLS[tbl] || [];
+
+            const cols = keys.map(k => `\`${k}\``).join(', ');
+            const placeholders = rows.map(() => '(' + keys.map(() => '?').join(', ') + ')').join(', ');
+            const values = rows.flatMap(row =>
+                keys.map(k => {
+                    const v = row[k];
+                    if (v === undefined) return null;
+                    // Konversi kolom datetime
+                    if (dtCols.includes(k)) return toMysqlDatetime(v);
+                    return v;
+                })
+            );
+
+            await p.query(`INSERT INTO \`${tbl}\` (${cols}) VALUES ${placeholders}`, values);
+        }
+
+        await p.query('SET FOREIGN_KEY_CHECKS = 1');
+
+        console.log(`[POSweb] Restore berhasil dari backup: ${backup.meta.waktu_backup}`);
+        res.json({ success: true, pesan: 'Restore berhasil! Data telah dipulihkan.' });
+    } catch (err) {
+        try {
+            await db.promise().query('SET FOREIGN_KEY_CHECKS = 1');
+        } catch(e) {}
+        console.error('[Restore Error]', err);
+        res.status(500).json({ success: false, pesan: 'Restore gagal: ' + err.message });
+    }
+});
+
 // ─── START ─────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`[POSweb] 🚀 Server aktif di port ${PORT}`));
+app.listen(PORT, () => console.log(`[POSweb] Server aktif di port ${PORT}`));
