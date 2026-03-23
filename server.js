@@ -68,6 +68,12 @@ async function initSystem() {
         try { await p.query('ALTER TABLE pengaturan ADD COLUMN diskon_global_aktif TINYINT(1) DEFAULT 0'); } catch(e) {}
         try { await p.query('ALTER TABLE detail_transaksi ADD COLUMN diskon DECIMAL(5,2) DEFAULT 0'); } catch(e) {}
         try { await p.query('ALTER TABLE transaksi ADD COLUMN diskon_nominal DECIMAL(10,2) DEFAULT 0 AFTER total_modal'); } catch(e) {}
+        try { await p.query('ALTER TABLE pengaturan ADD COLUMN ppn_pct DECIMAL(5,2) DEFAULT 0'); } catch(e) {}
+        try { await p.query('ALTER TABLE pengaturan ADD COLUMN ppn_aktif TINYINT(1) DEFAULT 0'); } catch(e) {}
+        try { await p.query("ALTER TABLE pengaturan ADD COLUMN ppn_mode VARCHAR(10) DEFAULT 'exclude'"); } catch(e) {}
+        try { await p.query("ALTER TABLE pengaturan ADD COLUMN ppn_mode VARCHAR(10) DEFAULT 'eksklusif'"); } catch(e) {}
+        try { await p.query('ALTER TABLE transaksi ADD COLUMN ppn_nominal DECIMAL(10,2) DEFAULT 0 AFTER diskon_nominal'); } catch(e) {}
+        try { await p.query("ALTER TABLE transaksi ADD COLUMN ppn_mode VARCHAR(10) DEFAULT 'exclude' AFTER ppn_nominal"); } catch(e) {}
 
         isSystemReady = true;
         console.log(`[POSweb] Terhubung ke database: ${config.database}`);
@@ -145,7 +151,7 @@ app.delete('/api/users/:id', (req, res) =>
 
 // ─── PENGATURAN ────────────────────────────────────────────
 app.get('/api/pengaturan', (req, res) =>
-    db.query('SELECT id, nama_toko, alamat_toko, telp_toko, prefix_struk, diskon_global, diskon_global_aktif FROM pengaturan WHERE id=1', (err, results) => res.json(results ? results[0] : {})));
+    db.query('SELECT id, nama_toko, alamat_toko, telp_toko, prefix_struk, diskon_global, diskon_global_aktif, ppn_pct, ppn_aktif, ppn_mode FROM pengaturan WHERE id=1', (err, results) => res.json(results ? results[0] : {})));
 
 // Logo terpisah — base64 bisa besar, jangan ikut response pengaturan utama
 app.get('/api/pengaturan/logo', (req, res) =>
@@ -190,16 +196,19 @@ app.put('/api/pengaturan/jam', (req, res) => {
 });
 
 app.put('/api/pengaturan', (req, res) => {
-    const { nama_toko, alamat_toko, telp_toko, prefix_struk, diskon_global, diskon_global_aktif } = req.body;
+    const { nama_toko, alamat_toko, telp_toko, prefix_struk, diskon_global, diskon_global_aktif, ppn_pct, ppn_aktif, ppn_mode } = req.body;
     const prefix = (prefix_struk || 'TRX').replace(/[^a-zA-Z0-9\-_]/g,'').toUpperCase().slice(0,10);
     const diskon = parseFloat(diskon_global) || 0;
     const diskonAktif = diskon_global_aktif ? 1 : 0;
+    const ppn = parseFloat(ppn_pct) || 0;
+    const ppnAktif = ppn_aktif ? 1 : 0;
+    const ppnMode = ['exclude','include'].includes(ppn_mode) ? ppn_mode : 'exclude';
     db.query(
-        `INSERT INTO pengaturan (id,nama_toko,alamat_toko,telp_toko,prefix_struk,diskon_global,diskon_global_aktif)
-         VALUES (1,?,?,?,?,?,?)
-         ON DUPLICATE KEY UPDATE nama_toko=?,alamat_toko=?,telp_toko=?,prefix_struk=?,diskon_global=?,diskon_global_aktif=?`,
-        [nama_toko, alamat_toko, telp_toko, prefix, diskon, diskonAktif,
-         nama_toko, alamat_toko, telp_toko, prefix, diskon, diskonAktif],
+        `INSERT INTO pengaturan (id,nama_toko,alamat_toko,telp_toko,prefix_struk,diskon_global,diskon_global_aktif,ppn_pct,ppn_aktif,ppn_mode)
+         VALUES (1,?,?,?,?,?,?,?,?,?)
+         ON DUPLICATE KEY UPDATE nama_toko=?,alamat_toko=?,telp_toko=?,prefix_struk=?,diskon_global=?,diskon_global_aktif=?,ppn_pct=?,ppn_aktif=?,ppn_mode=?`,
+        [nama_toko, alamat_toko, telp_toko, prefix, diskon, diskonAktif, ppn, ppnAktif, ppnMode,
+         nama_toko, alamat_toko, telp_toko, prefix, diskon, diskonAktif, ppn, ppnAktif, ppnMode],
         () => res.json({ success: true })
     );
 });
@@ -250,8 +259,8 @@ app.post('/api/transaksi', (req, res) => {
     total_bayar = parseFloat(total_bayar)||0; total_modal = parseFloat(total_modal)||0;
     diskon_nominal = parseFloat(diskon_nominal)||0;
     db.query(
-        'INSERT INTO transaksi (no_struk,total_bayar,total_modal,diskon_nominal,kasir,metode_bayar) VALUES (?,?,?,?,?,?)',
-        [no_struk, total_bayar, total_modal, diskon_nominal, kasir||'Admin', metode_bayar||'Tunai'],
+        'INSERT INTO transaksi (no_struk,total_bayar,total_modal,diskon_nominal,ppn_nominal,ppn_mode,kasir,metode_bayar) VALUES (?,?,?,?,?,?,?,?)',
+        [no_struk, total_bayar, total_modal, diskon_nominal, parseFloat(req.body.ppn_nominal)||0, req.body.ppn_mode||'exclude', kasir||'Admin', metode_bayar||'Tunai'],
         (err, result) => {
             if (err) return res.status(500).json({ success: false, pesan: err.message });
             const id_tx = result.insertId;
