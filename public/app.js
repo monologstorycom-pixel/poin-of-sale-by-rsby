@@ -26,6 +26,11 @@ var diskonGlobalPct    = 0;      // persen diskon global dari setting
 var diskonGlobalAktif  = false;  // toggle diskon global di kasir
 var diskonGlobalNominal= 0;      // nominal hasil kalkulasi diskon global
 var prefixStruk        = 'TRX';  // prefix nomor struk
+var ppnPct             = 0;      // persentase PPN
+var ppnAktif           = false;  // toggle PPN aktif
+var ppnNominal         = 0;      // nominal PPN hasil kalkulasi
+var ppnMode            = 'exclude'; // 'exclude' atau 'include'
+var ppnMode            = 'eksklusif'; // 'eksklusif' atau 'inklusif'
 
 // ─── UTILS ──────────────────────────────────────────────────
 function safeStr(val) {
@@ -507,7 +512,25 @@ function renderKeranjang() {
     } else {
         if (dBadge) dBadge.classList.add('hidden');
     }
-    total = subtotalKotor - diskonGlobalNominal;
+    // Hitung PPN berdasarkan mode exclude/include
+    ppnNominal = 0;
+    const baseAfterDiskon = subtotalKotor - diskonGlobalNominal;
+    const badgePPN = document.getElementById('badgePPNKeranjang');
+    if (ppnAktif && ppnPct > 0) {
+        if (ppnMode === 'include') {
+            // Harga sudah include PPN — ekstrak: PPN = Total × pct / (100 + pct)
+            ppnNominal = Math.round(baseAfterDiskon * ppnPct / (100 + ppnPct));
+            if (badgePPN) { badgePPN.innerText = 'PPN ' + ppnPct + '% (include) = ' + formatRupiah(ppnNominal) + ' sudah termasuk'; badgePPN.classList.remove('hidden'); }
+        } else {
+            // Exclude: PPN ditambahkan di atas harga
+            ppnNominal = Math.round(baseAfterDiskon * ppnPct / 100);
+            if (badgePPN) { badgePPN.innerText = 'PPN ' + ppnPct + '% (exclude) = +' + formatRupiah(ppnNominal); badgePPN.classList.remove('hidden'); }
+        }
+    } else {
+        if (badgePPN) badgePPN.classList.add('hidden');
+    }
+    // Include: total tidak berubah (PPN sudah di dalam). Exclude: total naik sebesar PPN.
+    total = ppnMode === 'include' ? baseAfterDiskon : baseAfterDiskon + ppnNominal;    // total bertambah PPN
     document.getElementById('areaKeranjang').innerHTML = html;
     document.getElementById('totalBelanja').innerText = formatRupiah(total);
     document.getElementById('itemCount').innerText = keranjang.length + ' ITEMS';
@@ -530,7 +553,7 @@ async function prosesBayar() {
     if (metodeBayarActive === 'Tunai' && b < total) return showAlert('Pembayaran Gagal', 'Uang tunai kurang.', 'error');
     const no = prefixStruk + '-' + Date.now(); const kasir = localStorage.getItem('userName') || 'Admin';
     try {
-        const res = await fetch('/api/transaksi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ no_struk: no, total_bayar: total, total_modal: totalModal, diskon_nominal: diskonGlobalNominal, keranjang, kasir, metode_bayar: metodeBayarActive }) });
+        const res = await fetch('/api/transaksi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ no_struk: no, total_bayar: total, total_modal: totalModal, diskon_nominal: diskonGlobalNominal, ppn_nominal: ppnNominal, ppn_mode: ppnMode, keranjang, kasir, metode_bayar: metodeBayarActive }) });
         if (!res.ok) throw new Error('Server error');
         document.getElementById('strukTanggal').innerText   = new Date().toLocaleString('id-ID');
         document.getElementById('strukNomor').innerText     = no;
@@ -559,6 +582,15 @@ async function prosesBayar() {
                 areaDskGlobal.classList.remove('hidden');
             } else { areaDskGlobal.classList.add('hidden'); }
         }
+        // Render PPN di struk thermal
+        const areaPPN = document.getElementById('areaStrukPPN');
+        if (areaPPN) {
+            if (ppnNominal > 0) {
+                document.getElementById('strukPPNLabel').innerText = 'PPN ' + ppnPct + '%';
+                document.getElementById('strukPPNPrint').innerText = '+' + formatRupiah(ppnNominal);
+                areaPPN.classList.remove('hidden');
+            } else { areaPPN.classList.add('hidden'); }
+        }
         document.getElementById('strukTotalPrint').innerText  = formatRupiah(total);
         document.getElementById('strukMetodePrint').innerText = metodeBayarActive.toUpperCase();
         const isTunai = metodeBayarActive === 'Tunai';
@@ -566,7 +598,7 @@ async function prosesBayar() {
         document.getElementById('areaStrukKembali').classList.toggle('hidden', !isTunai);
         if (isTunai) { document.getElementById('strukTunaiPrint').innerText = formatRupiah(b); document.getElementById('strukKembaliPrint').innerText = formatRupiah(b - total); }
         const trxResult = await res.json();
-        lastTrxData = { no, total, bayar: b, kembali: b - total, items: [...keranjang], metode: metodeBayarActive, kasir, id_transaksi: trxResult.id_transaksi, diskon_nominal: diskonGlobalNominal };
+        lastTrxData = { no, total, bayar: b, kembali: b - total, items: [...keranjang], metode: metodeBayarActive, kasir, id_transaksi: trxResult.id_transaksi, diskon_nominal: diskonGlobalNominal, ppn_nominal: ppnNominal, ppnPct: ppnPct, ppnMode: ppnMode };
         document.getElementById('modalKembalian').innerText = formatRupiah(b - total);
         document.getElementById('modalSuksesBayar').classList.remove('hidden');
     } catch { showAlert('Koneksi Gagal', 'Gagal memproses transaksi.', 'error'); }
@@ -617,7 +649,7 @@ function kirimWAKeNomor() {
 
 function selesaiBayar() {
     document.getElementById('modalSuksesBayar').classList.add('hidden');
-    keranjang = []; total = 0; totalModal = 0;
+    keranjang = []; total = 0; totalModal = 0; diskonGlobalNominal = 0; ppnNominal = 0;
     document.getElementById('uangBayar').value = '';
     pilihMetode('Tunai'); renderKeranjang(); loadKatalogKasir(); loadDataLaporan();
 }
@@ -688,6 +720,18 @@ async function loadPengaturan() {
             // Diskon global
             diskonGlobalPct = parseFloat(d.diskon_global) || 0;
             diskonGlobalAktif = !!(d.diskon_global_aktif);
+            // PPN
+            ppnPct   = parseFloat(d.ppn_pct) || 0;
+            ppnAktif = !!(d.ppn_aktif);
+            ppnMode  = d.ppn_mode || 'eksklusif';
+            const elPPNPct   = document.getElementById('setPPNPct');
+            const elPPNAktif = document.getElementById('setPPNAktif');
+            if (elPPNPct)   elPPNPct.value    = ppnPct || 11;
+            if (elPPNAktif) elPPNAktif.checked = ppnAktif;
+            // Set radio button mode PPN
+            const radios = document.querySelectorAll('input[name="ppnMode"]');
+            radios.forEach(r => { r.checked = r.value === ppnMode; });
+            updateStylePPNMode();
             const elDiskonPct = document.getElementById('setDiskonGlobal');
             if (elDiskonPct) elDiskonPct.value = diskonGlobalPct;
             const elDiskonAktif = document.getElementById('setDiskonGlobalAktif');
@@ -1113,13 +1157,27 @@ function renderLaporan(tipe) {
 }
 
 function gambarTabelLaporan(data) {
-    let o = 0, m = 0; const list = document.getElementById('listLaporan'); const thead = document.getElementById('theadLaporan'); list.innerHTML = '';
+    let o = 0, m = 0, totalPPN = 0; const list = document.getElementById('listLaporan'); const thead = document.getElementById('theadLaporan'); list.innerHTML = '';
     if (currentLaporanType === 'harian') {
-        if (thead) thead.innerHTML = '<th class="p-4">Struk / Kasir</th><th class="p-4 text-right">Rincian</th><th class="p-4 text-center">Audit</th>';
-        if (!data?.length) { list.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-slate-400 italic font-bold">Data kosong.</td></tr>`; }
+        if (thead) thead.innerHTML = '<th class="p-4">Struk / Kasir</th><th class="p-4 text-right">Netto</th><th class="p-4 text-right">PPN</th><th class="p-4 text-right">Total</th><th class="p-4 text-center">Audit</th>';
+        if (!data?.length) { list.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 italic font-bold">Data kosong.</td></tr>`; }
         else { data.forEach(t => {
-            const tb = parseFloat(t.total_bayar)||0; const tm = parseFloat(t.total_modal)||0; o+=tb; m+=tm;
-            list.innerHTML += `<tr class="border-b hover:bg-slate-50 transition"><td class="p-4"><div class="font-bold text-blue-600 font-mono text-[10px] uppercase">${t.no_struk}</div><div class="text-[9px] text-slate-400 font-bold mt-0.5">${new Date(t.tanggal).toLocaleString('id-ID')}</div><div class="text-[8px] bg-slate-100 text-slate-500 inline-block px-1.5 py-0.5 rounded border mt-1 uppercase font-bold">Kasir: ${safeStr(t.kasir)||'Admin'} • ${t.metode_bayar||'TUNAI'}</div></td><td class="p-4 text-right"><div class="font-bold text-slate-800 text-xs">${formatRupiah(tb)}</div><div class="text-[9px] text-green-600 font-black mt-0.5">Laba: ${formatRupiah(tb-tm)}</div></td><td class="p-4 text-center"><button onclick="lihatDetailStruk('${t.id}','${t.no_struk}','${t.tanggal}',${tb},'${safeStr(t.kasir)||'Admin'}','${t.metode_bayar||'TUNAI'}')" class="bg-slate-100 border text-slate-600 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-slate-200 shadow-sm active:scale-95">Audit</button></td></tr>`;
+            const tb   = parseFloat(t.total_bayar)||0;
+            const tm   = parseFloat(t.total_modal)||0;
+            const tppn = parseFloat(t.ppn_nominal)||0;
+            // Netto = total_bayar dikurangi PPN eksklusif (atau total_bayar jika inklusif PPN sudah di dalamnya)
+            const netto = tb - (ppnMode === 'eksklusif' ? tppn : 0);
+            o += tb; m += tm; totalPPN += tppn;
+            const ppnCell = tppn > 0
+                ? `<div class="font-bold text-violet-600 text-xs">${formatRupiah(tppn)}</div>`
+                : `<div class="text-slate-300 text-xs">—</div>`;
+            list.innerHTML += `<tr class="border-b hover:bg-slate-50 transition">
+              <td class="p-4"><div class="font-bold text-blue-600 font-mono text-[10px] uppercase">${t.no_struk}</div><div class="text-[9px] text-slate-400 font-bold mt-0.5">${new Date(t.tanggal).toLocaleString('id-ID')}</div><div class="text-[8px] bg-slate-100 text-slate-500 inline-block px-1.5 py-0.5 rounded border mt-1 uppercase font-bold">Kasir: ${safeStr(t.kasir)||'Admin'} • ${t.metode_bayar||'TUNAI'}</div></td>
+              <td class="p-4 text-right"><div class="font-bold text-slate-800 text-xs">${formatRupiah(netto)}</div><div class="text-[9px] text-green-600 font-black mt-0.5">Laba: ${formatRupiah(netto-tm)}</div></td>
+              <td class="p-4 text-right">${ppnCell}</td>
+              <td class="p-4 text-right"><div class="font-black text-slate-800 text-xs">${formatRupiah(tb)}</div></td>
+              <td class="p-4 text-center"><button onclick="lihatDetailStruk('${t.id}','${t.no_struk}','${t.tanggal}',${tb},'${safeStr(t.kasir)||'Admin'}','${t.metode_bayar||'TUNAI'}')" class="bg-slate-100 border text-slate-600 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-slate-200 shadow-sm active:scale-95">Audit</button></td>
+            </tr>`;
         }); }
     } else {
         if (thead) thead.innerHTML = '<th class="p-4">Periode Bulan</th><th class="p-4 text-right">Total Modal</th><th class="p-4 text-right">Omzet & Laba</th>';
@@ -1131,9 +1189,12 @@ function gambarTabelLaporan(data) {
             list.innerHTML = `<tr class="border-b hover:bg-slate-50"><td class="p-4"><div class="font-bold text-blue-600 text-sm uppercase">${monthName}</div><div class="text-[9px] text-slate-400 font-bold mt-0.5">Akumulasi ${data.length} Transaksi</div></td><td class="p-4 text-right font-bold text-slate-700 text-xs">${formatRupiah(m)}</td><td class="p-4 text-right"><div class="font-bold text-slate-800 text-xs">Omzet: ${formatRupiah(o)}</div><div class="text-[10px] text-green-600 font-black mt-0.5">Laba: ${formatRupiah(o-m)}</div></td></tr>`;
         }
     }
+    // totalPPN sudah dihitung di loop atas (let totalPPN = 0 di baris pertama)
     document.getElementById('lapOmzet').innerText = formatRupiah(o);
     document.getElementById('lapModal').innerText = formatRupiah(m);
-    document.getElementById('lapLaba').innerText  = formatRupiah(o-m);
+    document.getElementById('lapLaba').innerText  = formatRupiah(o - m - totalPPN);
+    const elPPN = document.getElementById('lapPPN');
+    if (elPPN) elPPN.innerText = totalPPN > 0 ? formatRupiah(totalPPN) : '-';
 }
 
 // ─── PERMISSION HELPER ────────────────────────────────────
@@ -1171,7 +1232,7 @@ async function returKeKasir() {
             const delRes = await fetch('/api/transaksi/' + memoriRevisi.id, { method: 'DELETE' });
             if (!delRes.ok) throw new Error('Gagal void transaksi');
             await loadKatalogKasir();
-            keranjang = []; total = 0; totalModal = 0;
+            keranjang = []; total = 0; totalModal = 0; diskonGlobalNominal = 0; ppnNominal = 0;
             memoriRevisi.items.forEach(item => {
                 const katalogItem = dataKatalog.find(k => k.barcode === item.barcode);
                 const qty = parseInt(item.qty) || 1;
@@ -1252,7 +1313,7 @@ async function langsungRetur(id, no, tgl, tot, kas, metode) {
                 const delRes = await fetch('/api/transaksi/' + id, { method: 'DELETE' });
                 if (!delRes.ok) throw new Error('Gagal void transaksi');
                 await loadKatalogKasir();
-                keranjang = []; total = 0; totalModal = 0;
+                keranjang = []; total = 0; totalModal = 0; diskonGlobalNominal = 0; ppnNominal = 0;
                 memoriRevisi.items.forEach(item => {
                     const katalogItem = dataKatalog.find(k => k.barcode === item.barcode);
                     const qty = parseInt(item.qty) || 1;
@@ -1289,21 +1350,83 @@ function pencarianStruk() {
 
 function cetakLaporanPDF() {
     if (!dataTampilLaporan.length) return showAlert('Laporan Kosong', 'Tidak ada data untuk dicetak.', 'error');
-    let o=0, m=0;
-    let h = `<div style="text-align:center;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:20px;"><h2>${profilToko.nama_toko||'TOKO'}</h2><p style="font-weight:bold;">${document.getElementById('teksFilterLaporan').innerText}</p></div><table><thead><tr>`;
+    let o = 0, m = 0, totalPPNPDF = 0;
+
+    // Header laporan
+    let h = `<div style="text-align:center;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:20px;">
+        <h2 style="margin:0 0 4px;">${profilToko.nama_toko||'TOKO'}</h2>
+        ${profilToko.alamat_toko ? `<p style="margin:0;font-size:11px;">${profilToko.alamat_toko}</p>` : ''}
+        ${profilToko.telp_toko ? `<p style="margin:0;font-size:11px;">Telp: ${profilToko.telp_toko}</p>` : ''}
+        <p style="font-weight:bold;margin:6px 0 0;">${document.getElementById('teksFilterLaporan').innerText}</p>
+    </div><table><thead><tr>`;
+
     if (currentLaporanType === 'harian') {
-        h += `<th>Struk</th><th>Kasir/Metode</th><th>Omzet</th><th>Laba</th></tr></thead><tbody>`;
-        dataTampilLaporan.forEach(t => { o+=parseFloat(t.total_bayar||0); m+=parseFloat(t.total_modal||0); h+=`<tr><td>${t.no_struk}</td><td style="text-transform:uppercase;">${safeStr(t.kasir)||'Admin'} - ${t.metode_bayar||'TUNAI'}</td><td align="right">${formatRupiah(t.total_bayar)}</td><td align="right">${formatRupiah((t.total_bayar||0)-(t.total_modal||0))}</td></tr>`; });
-        h += `<tr><th colspan="2">TOTAL</th><th align="right">${formatRupiah(o)}</th><th align="right">${formatRupiah(o-m)}</th></tr>`;
+        h += `<th>No Struk</th><th>Kasir / Metode</th><th align="right">PPN</th><th align="right">Omzet</th><th align="right">Laba Bersih</th></tr></thead><tbody>`;
+        dataTampilLaporan.forEach(t => {
+            const tb   = parseFloat(t.total_bayar)  || 0;
+            const tm   = parseFloat(t.total_modal)  || 0;
+            const tppn = parseFloat(t.ppn_nominal)  || 0;
+            const laba = tb - tm - tppn;
+            o += tb; m += tm; totalPPNPDF += tppn;
+            const ppnCell = tppn > 0
+                ? `<span style="color:#2563eb;font-weight:700;">${formatRupiah(tppn)}</span>`
+                : `<span style="color:#ccc;">—</span>`;
+            h += `<tr>
+                <td style="font-family:monospace;font-size:10px;">${t.no_struk}</td>
+                <td style="text-transform:uppercase;font-size:10px;">${safeStr(t.kasir)||'Admin'} · ${t.metode_bayar||'TUNAI'}</td>
+                <td align="right">${ppnCell}</td>
+                <td align="right">${formatRupiah(tb)}</td>
+                <td align="right">${formatRupiah(laba)}</td>
+            </tr>`;
+        });
+        h += `<tr style="font-weight:bold;border-top:2px solid #000;">
+            <td colspan="2">TOTAL (${dataTampilLaporan.length} transaksi)</td>
+            <td align="right" style="color:#2563eb;">${totalPPNPDF > 0 ? formatRupiah(totalPPNPDF) : '—'}</td>
+            <td align="right">${formatRupiah(o)}</td>
+            <td align="right">${formatRupiah(o - m - totalPPNPDF)}</td>
+        </tr>`;
     } else {
-        h += `<th>Bulan</th><th align="right">Modal</th><th align="right">Omzet</th><th align="right">Laba</th></tr></thead><tbody>`;
-        dataTampilLaporan.forEach(t => { o+=parseFloat(t.total_bayar||0); m+=parseFloat(t.total_modal||0); });
-        const [y,mn] = document.getElementById('filterBulan').value.split('-');
-        const monthName = new Date(y,mn-1,1).toLocaleDateString('id-ID',{month:'long',year:'numeric'});
-        h += `<tr><td>${monthName.toUpperCase()}</td><td align="right">${formatRupiah(m)}</td><td align="right">${formatRupiah(o)}</td><td align="right">${formatRupiah(o-m)}</td></tr>`;
+        h += `<th>Periode</th><th align="right">Modal</th><th align="right">PPN</th><th align="right">Omzet</th><th align="right">Laba Bersih</th></tr></thead><tbody>`;
+        dataTampilLaporan.forEach(t => {
+            o += parseFloat(t.total_bayar) || 0;
+            m += parseFloat(t.total_modal) || 0;
+            totalPPNPDF += parseFloat(t.ppn_nominal) || 0;
+        });
+        const [y, mn] = document.getElementById('filterBulan').value.split('-');
+        const monthName = new Date(y, mn-1, 1).toLocaleDateString('id-ID', {month:'long', year:'numeric'});
+        h += `<tr>
+            <td><strong>${monthName.toUpperCase()}</strong><br><span style="font-size:10px;color:#666;">${dataTampilLaporan.length} transaksi</span></td>
+            <td align="right">${formatRupiah(m)}</td>
+            <td align="right" style="color:#2563eb;font-weight:700;">${totalPPNPDF > 0 ? formatRupiah(totalPPNPDF) : '—'}</td>
+            <td align="right">${formatRupiah(o)}</td>
+            <td align="right">${formatRupiah(o - m - totalPPNPDF)}</td>
+        </tr>`;
     }
-    h += `</tbody></table><p style="text-align:right;font-size:10px;margin-top:10px;">Dicetak: ${new Date().toLocaleString('id-ID')}</p>`;
-    document.getElementById('areaPrintLaporan').innerHTML = h; doPrintAction(document.getElementById('areaPrintLaporan'), null);
+
+    // Summary box di bawah tabel
+    const labaBersih = o - m - totalPPNPDF;
+    h += `</tbody></table>
+    <div style="margin-top:16px;border:1px solid #e2e8f0;border-radius:8px;padding:12px;background:#f8fafc;">
+        <table style="width:100%;border-collapse:collapse;border:none;">
+            <tr>
+                <td style="padding:4px 8px;border:none;font-size:11px;color:#64748b;font-weight:600;">OMZET</td>
+                <td style="padding:4px 8px;border:none;font-size:13px;font-weight:800;text-align:right;color:#2563eb;">${formatRupiah(o)}</td>
+                <td style="padding:4px 8px;border:none;font-size:11px;color:#64748b;font-weight:600;">MODAL</td>
+                <td style="padding:4px 8px;border:none;font-size:13px;font-weight:800;text-align:right;">${formatRupiah(m)}</td>
+            </tr>
+            <tr>
+                <td style="padding:4px 8px;border:none;font-size:11px;color:#2563eb;font-weight:600;">TOTAL PPN</td>
+                <td style="padding:4px 8px;border:none;font-size:13px;font-weight:800;text-align:right;color:#2563eb;">${totalPPNPDF > 0 ? formatRupiah(totalPPNPDF) : '—'}</td>
+                <td style="padding:4px 8px;border:none;font-size:11px;color:#16a34a;font-weight:600;">LABA BERSIH</td>
+                <td style="padding:4px 8px;border:none;font-size:13px;font-weight:800;text-align:right;color:#16a34a;">${formatRupiah(labaBersih)}</td>
+            </tr>
+        </table>
+    </div>
+    ${totalPPNPDF > 0 ? `<p style="font-size:10px;color:#2563eb;margin-top:8px;font-weight:600;">* Total PPN ${formatRupiah(totalPPNPDF)} perlu disetor ke negara (tidak termasuk laba toko)</p>` : ''}
+    <p style="text-align:right;font-size:10px;color:#94a3b8;margin-top:8px;">Dicetak: ${new Date().toLocaleString('id-ID')}</p>`;
+
+    document.getElementById('areaPrintLaporan').innerHTML = h;
+    doPrintAction(document.getElementById('areaPrintLaporan'), null);
 }
 
 // ─── PENGGUNA ──────────────────────────────────────────────
@@ -1426,9 +1549,44 @@ function eksporPelangganWA() {
 }
 
 
+
+function updatePreviewPPN() {
+    const pct    = parseFloat(document.getElementById('setPPNPct')?.value) || 0;
+    const mode   = document.querySelector('input[name="ppnMode"]:checked')?.value || 'exclude';
+    const aktif  = document.getElementById('setPPNAktif')?.checked;
+    const box    = document.getElementById('boxPreviewPPN');
+    const isi    = document.getElementById('isiPreviewPPN');
+    if (!box || !isi) return;
+    if (!aktif || pct <= 0) { box.classList.add('hidden'); return; }
+    box.classList.remove('hidden');
+    const contoh = 100000;
+    if (mode === 'exclude') {
+        const ppn   = Math.round(contoh * pct / 100);
+        const total = contoh + ppn;
+        isi.innerHTML = 'Harga jual <b>Rp100.000</b> + PPN ' + pct + '% (Rp' + ppn.toLocaleString('id-ID') + ') = Total bayar <b>Rp' + total.toLocaleString('id-ID') + '</b><br>Laba dihitung dari harga sebelum PPN.';
+    } else {
+        const ppn  = Math.round(contoh * pct / (100 + pct));
+        const base = contoh - ppn;
+        isi.innerHTML = 'Harga jual <b>Rp100.000</b> sudah include PPN ' + pct + '% → PPN diekstrak <b>Rp' + ppn.toLocaleString('id-ID') + '</b><br>Harga dasar: Rp' + base.toLocaleString('id-ID') + ' · Laba dihitung dari harga dasar.';
+    }
+}
+
 // ─── PENGATURAN TRANSAKSI ──────────────────────────────────
 
+
+function updateStylePPNMode() {
+    var mode = (document.querySelector('input[name="ppnMode"]:checked') || {}).value || 'eksklusif';
+    var lbEks = document.getElementById('labelPPNEksklusif');
+    var lbInk = document.getElementById('labelPPNInklusif');
+    if (lbEks) { lbEks.classList.toggle('border-blue-500', mode === 'eksklusif'); lbEks.classList.toggle('bg-blue-50', mode === 'eksklusif'); lbEks.classList.toggle('border-slate-200', mode !== 'eksklusif'); }
+    if (lbInk) { lbInk.classList.toggle('border-blue-500', mode === 'inklusif');  lbInk.classList.toggle('bg-blue-50', mode === 'inklusif');  lbInk.classList.toggle('border-slate-200', mode !== 'inklusif'); }
+}
+
 function initPengaturanTransaksi() {
+    // Radio button PPN mode
+    document.querySelectorAll('input[name="ppnMode"]').forEach(function(r) {
+        r.addEventListener('change', updateStylePPNMode);
+    });
     // Live preview prefix
     const prefixInput = document.getElementById('setPrefixStruk');
     if (prefixInput) {
@@ -1438,6 +1596,9 @@ function initPengaturanTransaksi() {
             if (prev) prev.innerText = val || 'TRX';
         });
     }
+    // Live preview PPN
+    const ppnInput = document.getElementById('setPPNPct');
+    if (ppnInput) ppnInput.addEventListener('input', updatePreviewPPN);
     // Live preview diskon
     const diskonInput = document.getElementById('setDiskonGlobal');
     if (diskonInput) {
@@ -1464,13 +1625,20 @@ async function simpanPengaturanTransaksi() {
     const diskonAkt = document.getElementById('setDiskonGlobalAktif')?.checked ? 1 : 0;
 
     // Ambil data profil toko yang sudah ada (tidak mau overwrite)
+    const ppnPctVal  = parseFloat(document.getElementById('setPPNPct')?.value) || 0;
+    const ppnAktVal  = document.getElementById('setPPNAktif')?.checked ? 1 : 0;
+    const ppnModeVal = document.querySelector('input[name="ppnMode"]:checked')?.value || 'exclude';
     const d = {
         nama_toko:          profilToko.nama_toko   || '',
         alamat_toko:        profilToko.alamat_toko || '',
         telp_toko:          profilToko.telp_toko   || '',
         prefix_struk:       prefix,
         diskon_global:      diskonPct,
-        diskon_global_aktif: diskonAkt
+        diskon_global_aktif: diskonAkt,
+        ppn_pct:            ppnPctVal,
+        ppn_aktif:          ppnAktVal,
+        ppn_mode:           ppnModeVal,
+        ppn_mode:           (document.querySelector('input[name="ppnMode"]:checked')?.value || 'eksklusif')
     };
     try {
         const res = await fetch('/api/pengaturan', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) });
@@ -1478,6 +1646,10 @@ async function simpanPengaturanTransaksi() {
             prefixStruk       = prefix;
             diskonGlobalPct   = diskonPct;
             diskonGlobalAktif = !!diskonAkt;
+            ppnPct   = ppnPctVal;
+            ppnAktif = !!ppnAktVal;
+            ppnMode  = ppnModeVal;
+            ppnMode  = document.querySelector('input[name="ppnMode"]:checked')?.value || 'eksklusif';
             // Update tombol toggle diskon di kasir
             const btnToggle = document.getElementById('btnToggleDiskon');
             if (btnToggle) {
@@ -1714,8 +1886,9 @@ function buildStrukHTML(data) {
         '<hr class="hr">' +
         '<table>' +
         diskonProdukHTML +
-        (data.diskon_nominal > 0 ? '<tr><td style="font-size:9px;">SUBTOTAL</td><td style="text-align:right;font-size:9px;">' + formatRupiah((data.total || 0) + (data.diskon_nominal || 0)) + '</td></tr>' +
+        (data.diskon_nominal > 0 ? '<tr><td style="font-size:9px;">SUBTOTAL</td><td style="text-align:right;font-size:9px;">' + formatRupiah((data.total || 0) + (data.diskon_nominal || 0) - (data.ppn_nominal || 0)) + '</td></tr>' +
         '<tr><td style="font-size:9px;color:#15803d;">DISKON ' + (data.diskonPct || '') + '</td><td style="text-align:right;font-size:9px;color:#15803d;">-' + formatRupiah(data.diskon_nominal) + '</td></tr>' : '') +
+        (data.ppn_nominal > 0 ? '<tr><td style="font-size:9px;color:#2563eb;">PPN ' + (data.ppnPct || '') + '%</td><td style="text-align:right;font-size:9px;color:#2563eb;">+' + formatRupiah(data.ppn_nominal) + '</td></tr>' : '') +
         '<tr><td style="font-weight:700;">TOTAL</td><td style="text-align:right;font-weight:700;">' + formatRupiah(data.total) + '</td></tr>' +
         '<tr><td style="font-weight:700;">METODE</td><td style="text-align:right;font-weight:700;">' + (data.metode || 'TUNAI').toUpperCase() + '</td></tr>' +
         bayarRow + '</table>' +
@@ -1735,7 +1908,9 @@ function unduhStrukPDF() {
         bayar:          lastTrxData.bayar,
         items:          lastTrxData.items,
         diskon_nominal: lastTrxData.diskon_nominal || 0,
-        diskonPct:      diskonGlobalAktif && diskonGlobalPct > 0 ? diskonGlobalPct + '%' : ''
+        diskonPct:      diskonGlobalAktif && diskonGlobalPct > 0 ? diskonGlobalPct + '%' : '',
+        ppn_nominal:    lastTrxData.ppn_nominal || 0,
+        ppnPct:         ppnAktif && ppnPct > 0 ? ppnPct : 0
     });
 }
 
