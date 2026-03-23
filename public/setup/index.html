@@ -5,122 +5,216 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Instalasi POSweb by Rsby</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        .input-field {
+            width: 100%;
+            padding: 12px 14px;
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .input-field:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .input-field::placeholder { color: #94a3b8; font-weight: 500; }
+        .input-highlight { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+        .input-highlight:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
+
+        .section-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; }
+        .section-label { font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #64748b; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; }
+        .field-label { display: block; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; }
+
+        .btn-install { width: 100%; padding: 16px; background: #1e293b; color: #fff; border: none; border-radius: 12px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: background 0.2s, transform 0.1s, box-shadow 0.2s; box-shadow: 0 4px 12px rgba(30,41,59,0.25); }
+        .btn-install:hover:not(:disabled) { background: #0f172a; box-shadow: 0 6px 20px rgba(30,41,59,0.35); }
+        .btn-install:active:not(:disabled) { transform: scale(0.99); }
+        .btn-install:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .alert-box { display: none; padding: 14px 18px; border-radius: 12px; font-size: 13px; font-weight: 700; margin-bottom: 20px; }
+        .alert-box.show { display: block; }
+        .alert-box.success { background: #f0fdf4; border: 1px solid #86efac; color: #15803d; }
+        .alert-box.error   { background: #fff1f2; border: 1px solid #fda4af; color: #be123c; }
+
+        .copyright-bar { margin-top: 4px; padding: 12px 20px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 12px; text-align: center; }
+        .copyright-text { font-size: 11px; font-weight: 700; color: #94a3b8; letter-spacing: 0.04em; user-select: none; }
+        #__wm { position: absolute; left: -9999px; top: -9999px; opacity: 0; pointer-events: none; font-size: 1px; color: transparent; }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
+<body class="bg-slate-100 text-slate-900 min-h-screen flex items-center justify-center p-4">
 
-    <div class="bg-white text-slate-900 p-6 md:p-8 rounded-3xl shadow-2xl w-full max-w-2xl border-t-8 border-blue-600 max-h-[90vh] overflow-y-auto custom-scroll">
-        <div class="text-center mb-8 mt-2">
-            <h1 class="text-3xl font-extrabold tracking-tight mb-2">POSweb <span class="text-blue-600">Installer</span></h1>
-            <p class="text-slate-500 text-sm font-semibold">Setup Database, Profil Toko & Akun Admin</p>
+    <span id="__wm" aria-hidden="true"></span>
+
+    <div class="bg-white rounded-3xl shadow-xl w-full max-w-2xl border-t-4 border-blue-600 max-h-[92vh] overflow-y-auto custom-scroll">
+
+        <div class="px-8 pt-8 pb-6 border-b border-slate-100">
+            <div class="flex items-center justify-between mb-1">
+                <h1 class="text-2xl font-extrabold tracking-tight">POSweb <span class="text-blue-600">by Rsby</span></h1>
+                <span class="bg-blue-50 text-blue-600 border border-blue-200 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">v1.0</span>
+            </div>
+            <p class="text-slate-500 text-sm font-semibold">Setup Database &bull; Profil Toko &bull; Akun Admin</p>
         </div>
 
-        <div id="alertBox" class="hidden mb-6 p-4 rounded-xl font-bold text-sm text-center"></div>
+        <div class="px-8 py-6 space-y-5">
 
-        <div class="space-y-8">
-            <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200">
-                <h3 class="font-black text-slate-800 mb-4 border-b pb-2">1. Koneksi Database MySQL</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-bold">
-                    <div><label class="block text-slate-500 uppercase text-[10px] tracking-widest mb-1.5">Host</label><input type="text" id="dbHost" value="127.0.0.1" class="w-full p-3 bg-white border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></div>
-                    <div><label class="block text-slate-500 uppercase text-[10px] tracking-widest mb-1.5">Nama Database</label><input type="text" id="dbName" value="db_posweb" class="w-full p-3 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></div>
-                    <div><label class="block text-slate-500 uppercase text-[10px] tracking-widest mb-1.5">Username DB</label><input type="text" id="dbUser" value="root" class="w-full p-3 bg-white border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></div>
-                    <div><label class="block text-slate-500 uppercase text-[10px] tracking-widest mb-1.5">Password DB</label><input type="password" id="dbPass" placeholder="Kosongkan jika tidak ada" class="w-full p-3 bg-white border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></div>
-                </div>
-            </div>
+            <div class="alert-box" id="alertBox"><span id="alertText"></span></div>
 
-            <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200">
-                <h3 class="font-black text-slate-800 mb-4 border-b pb-2">2. Identitas Toko</h3>
-                <div class="space-y-4 text-sm font-bold">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-slate-500 uppercase text-[10px] tracking-widest mb-1.5">Nama Toko *</label><input type="text" id="tokoNama" placeholder="Misal: Toko Berkah" class="w-full p-3 bg-white border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></div>
-                        <div><label class="block text-slate-500 uppercase text-[10px] tracking-widest mb-1.5">Nomor Telepon</label><input type="text" id="tokoTelp" placeholder="08xxxxxxxx" class="w-full p-3 bg-white border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></div>
+            <div class="section-box">
+                <div class="section-label">1. Koneksi Database MySQL</div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="field-label">Host</label>
+                        <input type="text" id="dbHost" value="127.0.0.1" placeholder="127.0.0.1" class="input-field">
                     </div>
-                    <div><label class="block text-slate-500 uppercase text-[10px] tracking-widest mb-1.5">Alamat Lengkap</label><textarea id="tokoAlamat" rows="2" placeholder="Masukkan alamat toko" class="w-full p-3 bg-white border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></textarea></div>
+                    <div>
+                        <label class="field-label">Nama Database</label>
+                        <input type="text" id="dbName" value="db_posweb" placeholder="db_posweb" class="input-field input-highlight">
+                        <p class="text-[10px] text-slate-400 font-semibold mt-1.5">Dibuat otomatis jika belum ada</p>
+                    </div>
+                    <div>
+                        <label class="field-label">Username DB</label>
+                        <input type="text" id="dbUser" value="root" placeholder="root" class="input-field">
+                    </div>
+                    <div>
+                        <label class="field-label">Password DB</label>
+                        <input type="password" id="dbPass" placeholder="Kosongkan jika tidak ada" class="input-field">
+                    </div>
+                </div>
+                
+            </div>
+
+            <div class="section-box">
+                <div class="section-label">2. Identitas Toko</div>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="field-label">Nama Toko <span class="text-blue-600">*</span></label>
+                            <input type="text" id="tokoNama" placeholder="Misal: Toko Berkah" class="input-field">
+                        </div>
+                        <div>
+                            <label class="field-label">Nomor Telepon</label>
+                            <input type="text" id="tokoTelp" placeholder="08xxxxxxxxxx" class="input-field">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="field-label">Alamat Lengkap</label>
+                        <textarea id="tokoAlamat" rows="2" placeholder="Masukkan alamat toko" class="input-field" style="resize:none;"></textarea>
+                    </div>
                 </div>
             </div>
 
-            <div class="bg-blue-50 p-5 rounded-2xl border border-blue-200">
-                <h3 class="font-black text-blue-800 mb-4 border-b border-blue-200 pb-2">3. Buat Akun Admin Pertama</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-bold">
-                    <div><label class="block text-blue-500 uppercase text-[10px] tracking-widest mb-1.5">Username *</label><input type="text" id="ownerUser" placeholder="admin" class="w-full p-3 bg-white border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></div>
-                    <div><label class="block text-blue-500 uppercase text-[10px] tracking-widest mb-1.5">Password *</label><input type="password" id="ownerPass" placeholder="Minimal 4 karakter" class="w-full p-3 bg-white border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"></div>
+            <div class="section-box" style="background:#eff6ff; border-color:#bfdbfe;">
+                <div class="section-label" style="color:#2563eb; border-color:#bfdbfe;">3. Akun Administrator Pertama</div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="field-label" style="color:#3b82f6;">Username <span class="text-blue-600">*</span></label>
+                        <input type="text" id="ownerUser" placeholder="admin" class="input-field" autocomplete="new-password">
+                    </div>
+                    <div>
+                        <label class="field-label" style="color:#3b82f6;">Password <span class="text-blue-600">*</span></label>
+                        <input type="password" id="ownerPass" placeholder="Minimal 4 karakter" class="input-field" autocomplete="new-password">
+                    </div>
                 </div>
+                <p class="text-[11px] text-blue-500 font-bold mt-3">Akun ini otomatis mendapat semua hak akses (Super Admin)</p>
+            </div>
+
+            <button class="btn-install" id="btnInstall" onclick="prosesInstalasi()">Install Sistem</button>
+
+        </div>
+
+        <div class="px-8 pb-8">
+            <div class="copyright-bar">
+                <p class="copyright-text" id="__cpt"></p>
             </div>
         </div>
 
-        <button id="btnInstall" onclick="prosesInstalasi()" class="w-full bg-blue-600 text-white py-4 mt-8 rounded-xl font-black uppercase tracking-widest hover:bg-blue-700 shadow-xl active:scale-95 transition">
-            Install Sistem
-        </button>
     </div>
 
     <script>
+        (function() {
+            var plain = '2026 POSweb by Rsby | Hak cipta dilindungi undang-undang';
+            var K = 0x3F;
+            var encoded = [];
+            for (var i = 0; i < plain.length; i++) encoded.push(plain.charCodeAt(i) ^ K);
+            var result = encoded.map(function(b){ return String.fromCharCode(b ^ K); }).join('');
+
+            var el = document.getElementById('__cpt');
+            var wm = document.getElementById('__wm');
+
+            function inject() {
+                if (el) el.textContent = result;
+                if (wm) wm.setAttribute('data-c', btoa(unescape(encodeURIComponent(result))));
+            }
+            inject();
+
+            var obs = new MutationObserver(function() {
+                if (el && el.textContent !== result) inject();
+                if (wm && wm.getAttribute('data-c') !== btoa(unescape(encodeURIComponent(result)))) inject();
+            });
+            if (el) obs.observe(el, { childList: true, characterData: true, subtree: true });
+            if (wm) obs.observe(wm, { attributes: true });
+        })();
+
+        function showAlert(msg, type) {
+            var box = document.getElementById('alertBox');
+            document.getElementById('alertText').textContent = msg;
+            box.className = 'alert-box show ' + type;
+            box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        function hideAlert() { document.getElementById('alertBox').className = 'alert-box'; }
+
         async function prosesInstalasi() {
-            const btn = document.getElementById('btnInstall');
-            const alert = document.getElementById('alertBox');
-            
-            const data = {
-                dbHost: document.getElementById('dbHost').value,
-                dbUser: document.getElementById('dbUser').value,
-                dbPass: document.getElementById('dbPass').value,
-                dbName: document.getElementById('dbName').value,
-                tokoNama: document.getElementById('tokoNama').value,
-                tokoAlamat: document.getElementById('tokoAlamat').value,
-                tokoTelp: document.getElementById('tokoTelp').value,
-                ownerUser: document.getElementById('ownerUser').value,
-                ownerPass: document.getElementById('ownerPass').value
+            hideAlert();
+            var data = {
+                dbHost:     document.getElementById('dbHost').value.trim(),
+                dbUser:     document.getElementById('dbUser').value.trim(),
+                dbPass:     document.getElementById('dbPass').value,
+                dbName:     document.getElementById('dbName').value.trim(),
+                tokoNama:   document.getElementById('tokoNama').value.trim(),
+                tokoAlamat: document.getElementById('tokoAlamat').value.trim(),
+                tokoTelp:   document.getElementById('tokoTelp').value.trim(),
+                ownerUser:  document.getElementById('ownerUser').value.trim(),
+                ownerPass:  document.getElementById('ownerPass').value.trim()
             };
 
-            if(!data.tokoNama || !data.ownerUser || !data.ownerPass) {
-                alert.className = "mb-6 p-4 rounded-xl font-bold text-sm text-center bg-red-100 text-red-700 border border-red-200";
-                alert.innerText = "Error: Nama Toko, Username, dan Password WAJIB diisi!";
-                alert.classList.remove('hidden');
-                return;
-            }
+            if (!data.tokoNama)                               return showAlert('Nama Toko wajib diisi!', 'error');
+            if (!data.ownerUser)                              return showAlert('Username admin wajib diisi!', 'error');
+            if (!data.ownerPass || data.ownerPass.length < 4) return showAlert('Password minimal 4 karakter!', 'error');
 
-            btn.innerText = "MEMPROSES...";
+            var btn = document.getElementById('btnInstall');
+            btn.textContent = 'MEMPROSES...';
             btn.disabled = true;
-            btn.classList.add('opacity-50');
 
             try {
-                const res = await fetch('/api/setup', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                
-                const response = await res.json();
-
-                if(res.ok) {
-                    alert.className = "mb-6 p-4 rounded-xl font-bold text-sm text-center bg-green-100 text-green-700 border border-green-200";
-                    alert.innerText = "Instalasi Sukses! Sedang mengalihkan...";
-                    alert.classList.remove('hidden');
-                    
-                    // PAKSA HAPUS CACHE JAVASCRIPT BROWSER SUPAYA NGGAK NYANGKUT
+                var res    = await fetch('/api/setup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                var result = await res.json();
+                if (res.ok) {
+                    showAlert('Instalasi berhasil! Mengalihkan ke halaman login...', 'success');
+                    btn.textContent = 'INSTALASI SELESAI';
                     localStorage.clear();
-                    
-                    setTimeout(() => window.location.href = '/', 1500);
+                    setTimeout(function() { window.location.href = '/'; }, 1800);
                 } else {
-                    alert.className = "mb-6 p-4 rounded-xl font-bold text-sm text-center bg-red-100 text-red-700 border border-red-200";
-                    alert.innerText = response.pesan;
-                    alert.classList.remove('hidden');
-                    btn.innerText = "INSTALL SISTEM";
+                    showAlert(result.pesan || 'Terjadi kesalahan. Periksa kembali konfigurasi.', 'error');
+                    btn.textContent = 'Install Sistem';
                     btn.disabled = false;
-                    btn.classList.remove('opacity-50');
                 }
             } catch (err) {
-                alert.className = "mb-6 p-4 rounded-xl font-bold text-sm text-center bg-red-100 text-red-700 border border-red-200";
-                alert.innerText = "Server tidak merespons.";
-                alert.classList.remove('hidden');
-                btn.innerText = "INSTALL SISTEM";
+                showAlert('Server tidak merespons. Pastikan server.js sudah berjalan.', 'error');
+                btn.textContent = 'Install Sistem';
                 btn.disabled = false;
-                btn.classList.remove('opacity-50');
             }
         }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && document.activeElement.tagName !== 'TEXTAREA') prosesInstalasi();
+        });
     </script>
 </body>
 </html>
