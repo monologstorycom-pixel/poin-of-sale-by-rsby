@@ -62,6 +62,12 @@ async function initSystem() {
         try { await p.query('ALTER TABLE pengaturan ADD COLUMN logo_toko MEDIUMTEXT DEFAULT NULL'); } catch(e) {}
         try { await p.query("ALTER TABLE pengaturan ADD COLUMN jam_operasional TEXT DEFAULT NULL"); } catch(e) {}
         try { await p.query('ALTER TABLE transaksi ADD COLUMN wa_pelanggan VARCHAR(20) DEFAULT NULL AFTER metode_bayar'); } catch(e) {}
+        try { await p.query('ALTER TABLE produk ADD COLUMN diskon DECIMAL(5,2) DEFAULT 0 AFTER harga_jual'); } catch(e) {}
+        try { await p.query('ALTER TABLE pengaturan ADD COLUMN prefix_struk VARCHAR(20) DEFAULT \'TRX\''); } catch(e) {}
+        try { await p.query('ALTER TABLE pengaturan ADD COLUMN diskon_global DECIMAL(5,2) DEFAULT 0'); } catch(e) {}
+        try { await p.query('ALTER TABLE pengaturan ADD COLUMN diskon_global_aktif TINYINT(1) DEFAULT 0'); } catch(e) {}
+        try { await p.query('ALTER TABLE detail_transaksi ADD COLUMN diskon DECIMAL(5,2) DEFAULT 0'); } catch(e) {}
+        try { await p.query('ALTER TABLE transaksi ADD COLUMN diskon_nominal DECIMAL(10,2) DEFAULT 0 AFTER total_modal'); } catch(e) {}
 
         isSystemReady = true;
         console.log(`[POSweb] Terhubung ke database: ${config.database}`);
@@ -139,7 +145,7 @@ app.delete('/api/users/:id', (req, res) =>
 
 // ─── PENGATURAN ────────────────────────────────────────────
 app.get('/api/pengaturan', (req, res) =>
-    db.query('SELECT id, nama_toko, alamat_toko, telp_toko FROM pengaturan WHERE id=1', (err, results) => res.json(results ? results[0] : {})));
+    db.query('SELECT id, nama_toko, alamat_toko, telp_toko, prefix_struk, diskon_global, diskon_global_aktif FROM pengaturan WHERE id=1', (err, results) => res.json(results ? results[0] : {})));
 
 // Logo terpisah — base64 bisa besar, jangan ikut response pengaturan utama
 app.get('/api/pengaturan/logo', (req, res) =>
@@ -184,10 +190,16 @@ app.put('/api/pengaturan/jam', (req, res) => {
 });
 
 app.put('/api/pengaturan', (req, res) => {
-    const { nama_toko, alamat_toko, telp_toko } = req.body;
+    const { nama_toko, alamat_toko, telp_toko, prefix_struk, diskon_global, diskon_global_aktif } = req.body;
+    const prefix = (prefix_struk || 'TRX').replace(/[^a-zA-Z0-9\-_]/g,'').toUpperCase().slice(0,10);
+    const diskon = parseFloat(diskon_global) || 0;
+    const diskonAktif = diskon_global_aktif ? 1 : 0;
     db.query(
-        'INSERT INTO pengaturan (id,nama_toko,alamat_toko,telp_toko) VALUES (1,?,?,?) ON DUPLICATE KEY UPDATE nama_toko=?,alamat_toko=?,telp_toko=?',
-        [nama_toko, alamat_toko, telp_toko, nama_toko, alamat_toko, telp_toko],
+        `INSERT INTO pengaturan (id,nama_toko,alamat_toko,telp_toko,prefix_struk,diskon_global,diskon_global_aktif)
+         VALUES (1,?,?,?,?,?,?)
+         ON DUPLICATE KEY UPDATE nama_toko=?,alamat_toko=?,telp_toko=?,prefix_struk=?,diskon_global=?,diskon_global_aktif=?`,
+        [nama_toko, alamat_toko, telp_toko, prefix, diskon, diskonAktif,
+         nama_toko, alamat_toko, telp_toko, prefix, diskon, diskonAktif],
         () => res.json({ success: true })
     );
 });
@@ -197,15 +209,16 @@ app.get('/api/produk', (req, res) =>
     db.query('SELECT * FROM produk ORDER BY nama ASC', (err, results) => res.json(results || [])));
 
 app.post('/api/produk', (req, res) => {
-    let { barcode, nama, harga_jual, harga_beli, stok, kategori, satuan } = req.body;
-    harga_jual = parseFloat(harga_jual)||0; harga_beli = parseFloat(harga_beli)||0; stok = parseInt(stok)||0;
+    let { barcode, nama, harga_jual, harga_beli, stok, kategori, satuan, diskon } = req.body;
+    harga_jual = parseFloat(harga_jual)||0; harga_beli = parseFloat(harga_beli)||0;
+    stok = parseInt(stok)||0; diskon = parseFloat(diskon)||0;
     const kat = (kategori||'-').toUpperCase();
     db.query(
-        `INSERT INTO produk (barcode,nama,harga_jual,harga_beli,stok,kategori,satuan)
-         VALUES (?,?,?,?,?,?,?)
-         ON DUPLICATE KEY UPDATE stok=stok+?, harga_jual=?, harga_beli=?, kategori=?, satuan=?`,
-        [barcode, nama, harga_jual, harga_beli, stok, kat, satuan||'pcs',
-         stok, harga_jual, harga_beli, kat, satuan||'pcs'],
+        `INSERT INTO produk (barcode,nama,harga_jual,harga_beli,stok,kategori,satuan,diskon)
+         VALUES (?,?,?,?,?,?,?,?)
+         ON DUPLICATE KEY UPDATE stok=stok+?, harga_jual=?, harga_beli=?, kategori=?, satuan=?, diskon=?`,
+        [barcode, nama, harga_jual, harga_beli, stok, kat, satuan||'pcs', diskon,
+         stok, harga_jual, harga_beli, kat, satuan||'pcs', diskon],
         (err) => {
             if (err) return res.status(500).json({ success: false, pesan: err.message });
             res.json({ success: true });
@@ -214,12 +227,13 @@ app.post('/api/produk', (req, res) => {
 });
 
 app.put('/api/produk/:barcode', (req, res) => {
-    let { nama, harga_jual, harga_beli, stok, kategori, satuan } = req.body;
-    harga_jual = parseFloat(harga_jual)||0; harga_beli = parseFloat(harga_beli)||0; stok = parseInt(stok)||0;
+    let { nama, harga_jual, harga_beli, stok, kategori, satuan, diskon } = req.body;
+    harga_jual = parseFloat(harga_jual)||0; harga_beli = parseFloat(harga_beli)||0;
+    stok = parseInt(stok)||0; diskon = parseFloat(diskon)||0;
     const katUp = (kategori||'-').toUpperCase();
     db.query(
-        'UPDATE produk SET nama=?,harga_jual=?,harga_beli=?,stok=?,kategori=?,satuan=? WHERE barcode=?',
-        [nama, harga_jual, harga_beli, stok, katUp, satuan||'pcs', req.params.barcode],
+        'UPDATE produk SET nama=?,harga_jual=?,harga_beli=?,stok=?,kategori=?,satuan=?,diskon=? WHERE barcode=?',
+        [nama, harga_jual, harga_beli, stok, katUp, satuan||'pcs', diskon, req.params.barcode],
         (err) => {
             if (err) return res.status(500).json({ success: false, pesan: err.message });
             res.json({ success: true });
@@ -232,16 +246,17 @@ app.delete('/api/produk/:barcode', (req, res) =>
 
 // ─── TRANSAKSI ─────────────────────────────────────────────
 app.post('/api/transaksi', (req, res) => {
-    let { no_struk, total_bayar, total_modal, keranjang, kasir, metode_bayar } = req.body;
+    let { no_struk, total_bayar, total_modal, keranjang, kasir, metode_bayar, diskon_nominal } = req.body;
     total_bayar = parseFloat(total_bayar)||0; total_modal = parseFloat(total_modal)||0;
+    diskon_nominal = parseFloat(diskon_nominal)||0;
     db.query(
-        'INSERT INTO transaksi (no_struk,total_bayar,total_modal,kasir,metode_bayar) VALUES (?,?,?,?,?)',
-        [no_struk, total_bayar, total_modal, kasir||'Admin', metode_bayar||'Tunai'],
+        'INSERT INTO transaksi (no_struk,total_bayar,total_modal,diskon_nominal,kasir,metode_bayar) VALUES (?,?,?,?,?,?)',
+        [no_struk, total_bayar, total_modal, diskon_nominal, kasir||'Admin', metode_bayar||'Tunai'],
         (err, result) => {
             if (err) return res.status(500).json({ success: false, pesan: err.message });
             const id_tx = result.insertId;
-            const values = keranjang.map(i => [id_tx, i.barcode, i.nama, parseFloat(i.harga_jual)||0, parseInt(i.qty)||0, parseFloat(i.subtotal)||0]);
-            db.query('INSERT INTO detail_transaksi (id_transaksi,barcode,nama_barang,harga,qty,subtotal) VALUES ?', [values], () => {
+            const values = keranjang.map(i => [id_tx, i.barcode, i.nama, parseFloat(i.harga_jual)||0, parseInt(i.qty)||0, parseFloat(i.subtotal)||0, parseFloat(i.diskon||0)]);
+            db.query('INSERT INTO detail_transaksi (id_transaksi,barcode,nama_barang,harga,qty,subtotal,diskon) VALUES ?', [values], () => {
                 keranjang.forEach(i => db.query('UPDATE produk SET stok=stok-? WHERE barcode=?', [parseInt(i.qty)||0, i.barcode]));
                 res.json({ success: true, id_transaksi: id_tx });
             });
