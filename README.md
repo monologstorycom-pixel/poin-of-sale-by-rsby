@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![POSweb Banner](https://img.shields.io/badge/POSweb-v2.0-blue?style=for-the-badge&logo=shopping-cart)
+![POSweb Banner](https://img.shields.io/badge/POSweb-v2.1-blue?style=for-the-badge&logo=shopping-cart)
 ![Node.js](https://img.shields.io/badge/Node.js-20+-339933?style=for-the-badge&logo=node.js&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-5.7%2B-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
@@ -41,7 +41,7 @@ Dibangun dengan Node.js + MySQL, tanpa framework berat.
 ### 🖨️ Cetak & Unduh Struk
 - Mendukung printer thermal **58mm** dan **80mm**
 - Cetak langsung dari browser, tanpa driver tambahan
-- **Unduh PDF Struk** — bisa dibagikan ke pelanggan via WhatsApp/email
+- **Unduh PDF Struk** — download langsung tanpa dialog print, bisa dibagikan ke pelanggan via WhatsApp/email
 - Reprint struk lama dari menu Retur maupun Laporan
 - Footer struk bisa dikustomisasi
 - Struk menampilkan: logo toko, nama, alamat, jam operasional, diskon per item, diskon global, PPN, total
@@ -51,7 +51,7 @@ Dibangun dengan Node.js + MySQL, tanpa framework berat.
 - Input: barcode, nama, kategori, satuan, harga beli, harga jual, stok, **diskon produk (%)**
 - **Auto-generate barcode** urutan angka (001, 002, 003, dst.)
 - Kategori otomatis dinormalisasi ke UPPERCASE
-- Stok rendah (≤ batas yang dikonfigurasi) ditandai merah dan berkedip
+- Stok rendah (≤ batas warning) ditandai merah dan berkedip di katalog kasir
 - Filter/cari produk di tabel inventori
 - Badge diskon tampil di kolom harga jual
 
@@ -92,10 +92,15 @@ Dibangun dengan Node.js + MySQL, tanpa framework berat.
 - Tidak bisa hapus akun sendiri atau akun owner
 
 ### 📈 Dashboard Statistik
-- Omzet & laba hari ini (realtime)
-- Total produk & sisa stok
-- Grafik tren omzet 7 hari terakhir (Chart.js)
+- Omzet & laba hari ini + perbandingan **↑↓ % vs kemarin**
+- Jumlah transaksi hari ini
+- Total produk (+ info berapa yang sedang promo)
+- Total sisa stok (+ info berapa produk stok rendah)
+- **⚠️ Notifikasi alert stok hampir habis** — banner merah muncul otomatis di atas dashboard dengan daftar produk yang perlu direstok
+- **Grafik Perbandingan** — bar chart minggu ini vs minggu lalu per hari, lengkap dengan ringkasan % naik/turun
+- Grafik tren omzet 7 hari terakhir
 - Grafik 5 barang terlaris
+- **Transaksi terakhir hari ini** — 5 transaksi terbaru dengan jam, kasir, metode, dan laba
 - Hanya tampil untuk super admin
 
 ### ⚙️ Setting Toko
@@ -104,7 +109,7 @@ Setting dibagi menjadi sub-tab yang terorganisir:
 #### Profil Toko
 - Nama toko, alamat, nomor telepon
 - **Logo Toko** — upload gambar, tampil di header app dan struk cetak
-- **Jam Operasional** — atur per hari (Senin–Minggu), toggle buka/tutup per hari, atur cepat Sen–Jum / Sen–Sab / Setiap Hari
+- **Jam Operasional** — atur per hari (Senin–Minggu), toggle buka/tutup per hari, preset cepat Sen–Jum / Sen–Sab / Setiap Hari
 - **Tema Warna Aplikasi** — 6 pilihan: Biru, Hijau, Ungu, Merah, Orange, Pink
 
 #### Printer & Struk
@@ -279,6 +284,7 @@ posweb-rsby/
 | **Frontend** | Vanilla JavaScript (no framework) |
 | **CSS** | Tailwind CSS (CDN) |
 | **Chart** | Chart.js |
+| **PDF** | jsPDF (CDN) |
 | **Font** | Plus Jakarta Sans (Google Fonts) |
 | **Database** | MySQL / MariaDB |
 | **Container** | Docker (opsional) |
@@ -303,9 +309,11 @@ posweb-rsby/
 - **Diskon per produk** disimpan di kolom `diskon` tabel `produk` (persen)
 - **PPN** mendukung dua mode: exclude (ditambahkan ke total) dan include (diekstrak dari harga)
 - **Prefix struk** menggantikan `TRX-` hardcode, dikonfigurasi per toko
+- **Unduh PDF struk** menggunakan jsPDF — ditulis langsung ke PDF tanpa render DOM, tidak ada efek samping ke tampilan halaman
 - **Tema warna** disimpan di `localStorage` browser — berbeda per perangkat
 - **Pengaturan printer** (kertas, footer) disimpan di `localStorage` — berbeda per device
 - **Backup** mencakup semua tabel: produk, transaksi, detail_transaksi, users, pengaturan
+- **Dashboard** memuat data sekali dari API lalu kalkulasi semua metrik di frontend — efisien tanpa banyak request
 
 ---
 
@@ -331,7 +339,7 @@ MIT License — bebas digunakan, dimodifikasi, dan didistribusikan.
 
 **Dibuat dengan ❤️ oleh [Rsby](https://github.com/monologstorycom-pixel)**
 
-*POSweb v2 — Simple. Fast. Works.*
+*POSweb v2.1 — Simple. Fast. Works.*
 
 🌐 **[Demo Live](http://server.rsby.cloud:3000/)** · user: `rsby` | pass: `1234`
 
