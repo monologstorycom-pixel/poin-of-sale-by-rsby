@@ -209,7 +209,7 @@ function checkAuth() {
             const userInfoEl = document.getElementById('userInfo');
             if (userInfoEl) userInfoEl.innerText = name.toUpperCase();
 
-            const all = ['dashboard','kasir','gudang','laporan','retur','pengguna','setting','reprint','pelanggan','backup'];
+            const all = ['dashboard','kasir','gudang','laporan','pengguna','setting','pelanggan','backup','ppn'];
             const isSuperAdmin = name === 'owner' || role === 'owner' || role === 'admin' || role.includes('dashboard') || role.includes('pengguna');
             if (isSuperAdmin) {
                 currentPermissions = [...all];
@@ -219,9 +219,6 @@ function checkAuth() {
                 currentPermissions = ['kasir'];
             }
             if (!currentPermissions.includes('kasir')) currentPermissions.push('kasir');
-            if (currentPermissions.includes('reprint') && !currentPermissions.includes('retur')) {
-                currentPermissions.push('retur');
-            }
 
             all.forEach(t => {
                 const btn = document.getElementById('btnNav' + t.charAt(0).toUpperCase() + t.slice(1));
@@ -249,6 +246,24 @@ function checkAuth() {
                 } else {
                     stabBackup.style.setProperty('display', 'none', 'important');
                 }
+            }
+
+            // Tampilkan/sembunyikan sub-tab Transaksi (PPN) di Setting
+            const stabTransaksi = document.getElementById('stab-transaksi');
+            if (stabTransaksi) {
+                if (isSuperAdmin || currentPermissions.includes('ppn')) {
+                    stabTransaksi.style.removeProperty('display');
+                } else {
+                    stabTransaksi.style.setProperty('display', 'none', 'important');
+                }
+            }
+
+            // Tampilkan/sembunyikan sub-tab Retur & Cetak Ulang di Setting
+            const stabReturCetak = document.getElementById('stab-retur-cetak');
+            if (stabReturCetak) {
+                const bsaReturCetak = isSuperAdmin || currentPermissions.includes('reprint') || currentPermissions.includes('retur');
+                if (bsaReturCetak) stabReturCetak.style.removeProperty('display');
+                else stabReturCetak.style.setProperty('display', 'none', 'important');
             }
 
             if (currentPermissions.includes('dashboard')) showTab('dashboard');
@@ -311,7 +326,7 @@ function showTab(t) {
     if (t === 'gudang')    loadBarang();
     if (t === 'laporan')   loadDataLaporan();
     if (t === 'kasir')     loadKatalogKasir();
-    if (t === 'retur')     loadTabRetur();
+
     if (t === 'pengguna')  { showTab('setting'); return; }
     if (t === 'pelanggan') loadPelangganWA();
     if (t === 'setting')   { loadUsers(); loadInfoBackup(); showSettingTab('toko'); setTimeout(initPengaturanTransaksi, 100); }
@@ -397,20 +412,19 @@ async function simpanBarang() {
     const btn = document.getElementById('btnSimpanBarang');
     if (btn) { btn.innerText = 'MENYIMPAN...'; btn.disabled = true; btn.classList.add('opacity-50'); }
     try {
-        const res = await fetch(isEditMode ? `/api/produk/${b}` : '/api/produk', {
-            method: isEditMode ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ barcode: b, nama: n, harga_jual: hj, harga_beli: hb, stok: s, kategori: k, satuan: st, diskon: dk }),
-        });
+        const url    = isEditMode ? `/api/produk/${b}` : '/api/produk';
+        const method = isEditMode ? 'PUT' : 'POST';
+        const res    = await fetchAuth(url, { method, body: JSON.stringify({ barcode: b, nama: n, harga_jual: hj, harga_beli: hb, stok: s, kategori: k, satuan: st, diskon: dk }) });
         const rd = await res.json();
         if (res.ok && rd.success) { showAlert('Sukses', 'Data barang berhasil disimpan!', 'success'); batalEdit(); loadBarang(); loadKatalogKasir(); }
-        else { showAlert('Gagal', rd.pesan || 'Barcode mungkin sudah digunakan.', 'error'); }
+        else { showAlert('Gagal', rd.pesan || (res.status === 401 ? 'Sesi habis, silakan login ulang.' : 'Barcode mungkin sudah digunakan.'), 'error'); }
     } catch { showAlert('Gagal', 'Koneksi ke server terputus.', 'error'); }
     finally { if (btn) { btn.innerText = isEditMode ? 'Update Barang' : 'Simpan Barang'; btn.disabled = false; btn.classList.remove('opacity-50'); } }
 }
 
 async function hapusBarang(b) {
     showConfirm('Hapus Barang?', 'Barang ini akan dihapus secara permanen. Lanjutkan?', async () => {
-        await fetch(`/api/produk/${b}`, { method: 'DELETE' }); loadBarang(); loadKatalogKasir(); showAlert('Terhapus', 'Barang berhasil dihapus.', 'success');
+        await fetchAuth(`/api/produk/${b}`, { method: 'DELETE' }); loadBarang(); loadKatalogKasir(); showAlert('Terhapus', 'Barang berhasil dihapus.', 'success');
     });
 }
 
@@ -800,7 +814,7 @@ async function loadDashboard() {
         const jmlTrxEl      = document.getElementById('dashJmlTrx');
         if (jmlTrxEl) jmlTrxEl.innerText = trxHariIni.length + ' transaksi';
         if (trxTerakhirEl) {
-            const last5 = [...trxHariIni].reverse().slice(0, 5);
+            const last5 = [...trxHariIni].sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).slice(0, 5);
             if (last5.length === 0) {
                 trxTerakhirEl.innerHTML = '<div class="px-4 py-6 text-center text-slate-300 text-xs font-bold italic">Belum ada transaksi hari ini</div>';
             } else {
@@ -883,16 +897,14 @@ async function loadDashboard() {
 
 // Sub-tab navigasi di dalam Setting
 function showSettingTab(name) {
-    // Toggle stab button style
     document.querySelectorAll('.setting-stab').forEach(b => {
         b.className = b.className.replace('stab-active','stab-inactive');
     });
     const activeBtn = document.getElementById('stab-' + name);
-    if (activeBtn) {
-        activeBtn.className = activeBtn.className.replace('stab-inactive','stab-active');
-    }
-    // Sembunyikan semua panel
+    if (activeBtn) activeBtn.className = activeBtn.className.replace('stab-inactive','stab-active');
     document.querySelectorAll('.setting-panel').forEach(p => p.classList.add('hidden'));
+    // Load data saat masuk panel Retur & Cetak Ulang
+    if (name === 'retur-cetak') { loadTabReprint(); loadTabRetur(); }
     // Tampilkan panel yang dipilih
     const panel = document.getElementById('spanel-' + name);
     if (panel) panel.classList.remove('hidden');
@@ -1462,6 +1474,60 @@ async function returKeKasir() {
 // ─── TAB RETUR ─────────────────────────────────────────────
 var dataTabRetur = [];
 
+// ─── TAB REPRINT ───────────────────────────────────────────
+async function loadTabReprint() {
+    const tglEl = document.getElementById('filterReprintTgl');
+    if (tglEl && !tglEl.value) tglEl.value = new Date().toISOString().split('T')[0];
+    const tgl  = tglEl ? tglEl.value : new Date().toISOString().split('T')[0];
+    try {
+        const res  = await fetchAuth('/api/transaksi');
+        const data = await res.json();
+        const list = (Array.isArray(data) ? data : []).filter(t => (t.tanggal||'').startsWith(tgl));
+        semuaTransaksiReprint = list;
+        renderTabReprint(list);
+    } catch(e) { console.error(e); }
+}
+
+function resetFilterReprint() {
+    const el = document.getElementById('filterReprintTgl');
+    if (el) { el.value = new Date().toISOString().split('T')[0]; loadTabReprint(); }
+}
+
+function filterTabReprint() {
+    const kw = (document.getElementById('cariStrukReprint')?.value || '').toLowerCase();
+    const filtered = (semuaTransaksiReprint || []).filter(t =>
+        (t.no_struk||'').toLowerCase().includes(kw) || (t.kasir||'').toLowerCase().includes(kw)
+    );
+    renderTabReprint(filtered);
+}
+
+function renderTabReprint(list) {
+    const tbody = document.getElementById('listTabReprint');
+    if (!tbody) return;
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="3" class="p-6 text-center text-slate-400 italic font-bold">Tidak ada data.</td></tr>'; return; }
+    tbody.innerHTML = list.map(t => {
+        const tb  = parseFloat(t.total_bayar || 0);
+        const jam = new Date(t.tanggal).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        return `<tr class="border-b hover:bg-slate-50 transition">
+            <td class="p-4">
+                <div class="font-black text-blue-600 font-mono text-[10px] uppercase">${t.no_struk}</div>
+                <div class="text-[9px] text-slate-400 font-bold mt-0.5">${jam} · Kasir: ${safeStr(t.kasir)||'Admin'} · ${t.metode_bayar||'TUNAI'}</div>
+            </td>
+            <td class="p-4 text-right font-bold text-slate-800 text-xs">${formatRupiah(tb)}</td>
+            <td class="p-4">
+                <div class="flex gap-2 justify-center flex-wrap">
+                    <button onclick="langungReprint('${t.id}','${t.no_struk}','${t.tanggal}',${tb},'${safeStr(t.kasir)||'Admin'}','${t.metode_bayar||'TUNAI'}')"
+                        class="bg-blue-500 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-blue-600 active:scale-95 transition shadow-sm">🖨 Cetak</button>
+                    <button onclick="langungUnduhPDF('${t.id}','${t.no_struk}','${t.tanggal}',${tb},'${safeStr(t.kasir)||'Admin'}','${t.metode_bayar||'TUNAI'}')"
+                        class="bg-slate-700 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-slate-900 active:scale-95 transition shadow-sm">⬇ PDF</button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+var semuaTransaksiReprint = [];
+
 async function loadTabRetur() {
     try {
         const inputTgl = document.getElementById('filterReturTgl');
@@ -1494,15 +1560,28 @@ function filterTabRetur() {
 function renderTabRetur(data) {
     const listEl = document.getElementById('listTabRetur');
     if (!listEl) return;
-    const canReprint = hasPermission('reprint');
-    const canRetur   = hasPermission('retur');
+    const canRetur = hasPermission('retur');
     if (!data.length) { listEl.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-slate-400 italic font-bold">Tidak ada transaksi.</td></tr>`; return; }
     listEl.innerHTML = data.map(t => {
         const tb = parseFloat(t.total_bayar) || 0;
-        const btnReprint = canReprint ? `<button onclick="langungReprint('${t.id}','${t.no_struk}','${t.tanggal}',${tb},'${safeStr(t.kasir)||'Admin'}','${t.metode_bayar||'TUNAI'}')" class="bg-blue-500 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-blue-600 active:scale-95 transition">Reprint</button>` : '';
-        const btnUnduhPDFRetur = `<button onclick="langungUnduhPDF('${t.id}','${t.no_struk}','${t.tanggal}',${tb},'${safeStr(t.kasir)||'Admin'}','${t.metode_bayar||'TUNAI'}')" class="bg-slate-700 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-slate-900 active:scale-95 transition">Unduh PDF</button>`;
-        const btnRetur = canRetur ? `<button onclick="langsungRetur('${t.id}','${t.no_struk}','${t.tanggal}',${tb},'${safeStr(t.kasir)||'Admin'}','${t.metode_bayar||'TUNAI'}')" class="bg-orange-500 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-orange-600 active:scale-95 transition">Retur</button>` : '';
-        return `<tr class="border-b hover:bg-slate-50 transition"><td class="p-4"><div class="font-bold text-blue-600 font-mono text-[10px] uppercase">${t.no_struk}</div><div class="text-[9px] text-slate-400 mt-0.5">${new Date(t.tanggal).toLocaleString('id-ID')}</div><div class="text-[8px] bg-slate-100 text-slate-500 inline-block px-1.5 py-0.5 rounded border mt-1 uppercase font-bold">Kasir: ${safeStr(t.kasir)||'Admin'} • ${t.metode_bayar||'TUNAI'}</div></td><td class="p-4 text-right font-black text-slate-800 text-xs">${formatRupiah(tb)}</td><td class="p-4"><div class="flex gap-2 justify-center flex-wrap">${btnReprint}${btnUnduhPDFRetur}${btnRetur}</div></td></tr>`;
+        // Tab Retur: hanya Unduh PDF + tombol Retur — tidak ada Reprint
+        const btnUnduhPDF = `<button onclick="langungUnduhPDF('${t.id}','${t.no_struk}','${t.tanggal}',${tb},'${safeStr(t.kasir)||'Admin'}','${t.metode_bayar||'TUNAI'}')"
+            class="bg-slate-700 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-slate-900 active:scale-95 transition shadow-sm">⬇ PDF</button>`;
+        const btnRetur = canRetur
+            ? `<button onclick="langsungRetur('${t.id}','${t.no_struk}','${t.tanggal}',${tb},'${safeStr(t.kasir)||'Admin'}','${t.metode_bayar||'TUNAI'}')"
+                class="bg-orange-500 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-orange-600 active:scale-95 transition shadow-sm">↩ Retur</button>`
+            : '';
+        return `<tr class="border-b hover:bg-slate-50 transition">
+            <td class="p-4">
+                <div class="font-bold text-blue-600 font-mono text-[10px] uppercase">${t.no_struk}</div>
+                <div class="text-[9px] text-slate-400 mt-0.5">${new Date(t.tanggal).toLocaleString('id-ID')}</div>
+                <div class="text-[8px] bg-slate-100 text-slate-500 inline-block px-1.5 py-0.5 rounded border mt-1 uppercase font-bold">Kasir: ${safeStr(t.kasir)||'Admin'} · ${t.metode_bayar||'TUNAI'}</div>
+            </td>
+            <td class="p-4 text-right font-black text-slate-800 text-xs">${formatRupiah(tb)}</td>
+            <td class="p-4">
+                <div class="flex gap-2 justify-center flex-wrap">${btnUnduhPDF}${btnRetur}</div>
+            </td>
+        </tr>`;
     }).join('');
 }
 
@@ -1679,10 +1758,11 @@ async function simpanUser() {
     if (!u) return showAlert('Peringatan', 'Username tidak boleh kosong.', 'error');
     if (!isEditUserMode && !p) return showAlert('Peringatan', 'Password wajib diisi.', 'error');
     try {
-        const res = await fetch(isEditUserMode?`/api/users/${document.getElementById('addUserId').value}`:'/api/users', { method: isEditUserMode?'PUT':'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username:u,password:p,role:r}) });
-        if (!res.ok) throw new Error('server error');
-        const rd = await res.json();
-        if (!rd.success) throw new Error(rd.pesan || 'gagal');
+        const url    = isEditUserMode ? `/api/users/${document.getElementById('addUserId').value}` : '/api/users';
+        const method = isEditUserMode ? 'PUT' : 'POST';
+        const res    = await fetchAuth(url, { method, body: JSON.stringify({username:u,password:p,role:r}) });
+        const rd     = await res.json();
+        if (!res.ok || !rd.success) throw new Error(rd.pesan || (res.status === 401 ? 'Tidak terautentikasi. Coba refresh halaman.' : 'Gagal menyimpan akun.'));
         showAlert('Sukses', 'Akun berhasil disimpan.', 'success'); batalEditUser(); loadUsers();
     } catch { showAlert('Error', 'Username mungkin sudah terpakai.', 'error'); }
 }
