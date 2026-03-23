@@ -74,7 +74,7 @@
                     <button id="btnNavKasir"     onclick="showTab('kasir')"     class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Kasir</button>
                     <button id="btnNavGudang"    onclick="showTab('gudang')"    class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Gudang</button>
                     <button id="btnNavLaporan"   onclick="showTab('laporan')"   class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Laporan</button>
-                    <button id="btnNavRetur"     onclick="showTab('retur')"     class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Retur</button>
+
                     <button id="btnNavSetting"   onclick="showTab('setting')"   class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Setting</button>
                     <div class="mt-auto md:hidden pt-4 border-t border-slate-100 w-full"></div>
                     <button id="btnNavPelanggan" onclick="showTab('pelanggan')" class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Pelanggan WA</button>
@@ -296,30 +296,7 @@
                 </div>
 
                 <!-- TAB RETUR -->
-                <div id="tabRetur" class="tab-content hidden h-full overflow-y-auto custom-scroll space-y-4 pb-6">
-                    <div class="flex items-center justify-between gap-3 flex-wrap">
-                        <h2 class="font-black text-xl tracking-tight text-slate-800">Retur &amp; Reprint</h2>
-                        <div class="flex gap-2 items-center">
-                            <input type="date" id="filterReturTgl" class="border rounded-lg px-3 py-2 text-xs font-bold outline-none shadow-sm focus:ring-2 focus:ring-blue-400" onchange="loadTabRetur()">
-                            <button onclick="resetFilterRetur()" class="text-[10px] font-bold text-slate-400 hover:text-blue-600 uppercase tracking-widest transition px-2">Hari Ini</button>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
-                        <div class="p-3 border-b bg-slate-50">
-                            <input type="text" id="cariStrukRetur" placeholder="Cari nomor struk atau nama kasir..." class="w-full p-2.5 text-sm rounded-lg border outline-none focus:ring-2 focus:ring-blue-400" oninput="filterTabRetur()">
-                        </div>
-                        <div class="overflow-x-auto max-h-[65vh] custom-scroll">
-                            <table class="w-full text-left text-xs">
-                                <thead class="bg-white border-b sticky top-0 font-black text-slate-400 text-[10px] uppercase tracking-widest">
-                                    <tr><th class="p-4">Struk / Kasir</th><th class="p-4 text-right">Total</th><th class="p-4 text-center">Aksi</th></tr>
-                                </thead>
-                                <tbody id="listTabRetur" class="divide-y divide-slate-100">
-                                    <tr><td colspan="3" class="p-6 text-center text-slate-400 italic font-bold">Memuat...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+
 
                 <!-- PELANGGAN WA -->
                 <div id="tabPelanggan" class="tab-content hidden h-full overflow-y-auto custom-scroll space-y-4 pb-10">
@@ -355,6 +332,7 @@
                             <button onclick="showSettingTab('transaksi')" id="stab-transaksi" class="setting-stab stab-inactive shrink-0 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all">Transaksi</button>
                             <button onclick="showSettingTab('akun')"    id="stab-akun"    id="stab-akun" class="setting-stab stab-inactive shrink-0 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all" style="display:none;" data-permission="pengguna">Manajemen Akun</button>
                             <button onclick="showSettingTab('backup')"  id="stab-backup"  class="setting-stab stab-inactive shrink-0 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all" style="display:none;" data-permission="backup">Backup &amp; Restore</button>
+                            <button onclick="showSettingTab('retur-cetak')" id="stab-retur-cetak" class="setting-stab stab-inactive shrink-0 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all" style="display:none;" data-permission="retur-cetak">Retur &amp; Cetak Ulang</button>
                         </div>
                     </div>
 
@@ -658,6 +636,65 @@
                             </div>
                         </div>
 
+                        <!-- ── RETUR & CETAK ULANG ── -->
+                        <div id="spanel-retur-cetak" class="setting-panel space-y-4 hidden">
+
+                            <!-- Cetak Ulang -->
+                            <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+                                <div class="px-6 py-4 border-b bg-slate-50 flex items-center justify-between">
+                                    <div>
+                                        <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Cetak Ulang Struk</h3>
+                                        <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Cetak ulang atau unduh PDF struk lama</p>
+                                    </div>
+                                    <div class="flex gap-2 items-center">
+                                        <input type="date" id="filterReprintTgl" class="border rounded-lg px-3 py-2 text-xs font-bold outline-none shadow-sm focus:ring-2 focus:ring-blue-400" onchange="loadTabReprint()">
+                                        <button onclick="resetFilterReprint()" class="text-[10px] font-bold text-slate-400 hover:text-blue-600 uppercase tracking-widest transition px-2">Hari Ini</button>
+                                    </div>
+                                </div>
+                                <div class="p-3 border-b bg-white">
+                                    <input type="text" id="cariStrukReprint" placeholder="Cari nomor struk atau nama kasir..." class="w-full p-2.5 text-sm rounded-lg border outline-none focus:ring-2 focus:ring-blue-400" oninput="filterTabReprint()">
+                                </div>
+                                <div class="overflow-x-auto max-h-[50vh] custom-scroll">
+                                    <table class="w-full text-left text-xs">
+                                        <thead class="bg-slate-50 border-b sticky top-0 font-black text-slate-400 text-[10px] uppercase tracking-widest">
+                                            <tr><th class="p-4">Struk / Kasir</th><th class="p-4 text-right">Total</th><th class="p-4 text-center">Aksi</th></tr>
+                                        </thead>
+                                        <tbody id="listTabReprint" class="divide-y divide-slate-100">
+                                            <tr><td colspan="3" class="p-6 text-center text-slate-400 italic font-bold">Memuat...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Retur Transaksi -->
+                            <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+                                <div class="px-6 py-4 border-b bg-slate-50 flex items-center justify-between">
+                                    <div>
+                                        <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Retur Transaksi</h3>
+                                        <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Void transaksi dan kembalikan item ke keranjang</p>
+                                    </div>
+                                    <div class="flex gap-2 items-center">
+                                        <input type="date" id="filterReturTgl" class="border rounded-lg px-3 py-2 text-xs font-bold outline-none shadow-sm focus:ring-2 focus:ring-orange-400" onchange="loadTabRetur()">
+                                        <button onclick="resetFilterRetur()" class="text-[10px] font-bold text-slate-400 hover:text-orange-600 uppercase tracking-widest transition px-2">Hari Ini</button>
+                                    </div>
+                                </div>
+                                <div class="p-3 border-b bg-white">
+                                    <input type="text" id="cariStrukRetur" placeholder="Cari nomor struk atau nama kasir..." class="w-full p-2.5 text-sm rounded-lg border outline-none focus:ring-2 focus:ring-orange-400" oninput="filterTabRetur()">
+                                </div>
+                                <div class="overflow-x-auto max-h-[50vh] custom-scroll">
+                                    <table class="w-full text-left text-xs">
+                                        <thead class="bg-slate-50 border-b sticky top-0 font-black text-slate-400 text-[10px] uppercase tracking-widest">
+                                            <tr><th class="p-4">Struk / Kasir</th><th class="p-4 text-right">Total</th><th class="p-4 text-center">Aksi</th></tr>
+                                        </thead>
+                                        <tbody id="listTabRetur" class="divide-y divide-slate-100">
+                                            <tr><td colspan="3" class="p-6 text-center text-slate-400 italic font-bold">Memuat...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </div>
+
                         <!-- ── MANAJEMEN AKUN ── -->
                         <div id="spanel-akun" id="sectionManajemenAkun" class="setting-panel space-y-4 hidden">
                             <!-- Form tambah/edit akun -->
@@ -706,6 +743,9 @@
                                             </label>
                                             <label class="flex items-center gap-2 px-3 py-2.5 bg-emerald-50 border border-emerald-200 rounded-xl cursor-pointer hover:bg-emerald-100 transition text-xs font-bold">
                                                 <input type="checkbox" value="backup" class="akses-cb accent-emerald-600"> Backup DB
+                                            </label>
+                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-blue-50 border border-blue-200 rounded-xl cursor-pointer hover:bg-blue-100 transition text-xs font-bold">
+                                                <input type="checkbox" value="ppn" class="akses-cb accent-blue-600"> Kelola PPN
                                             </label>
                                         </div>
                                     </div>
