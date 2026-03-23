@@ -2,11 +2,12 @@
 
 <div align="center">
 
-![POSweb Banner](https://img.shields.io/badge/POSweb-v2.1-blue?style=for-the-badge&logo=shopping-cart)
+![POSweb Banner](https://img.shields.io/badge/POSweb-v2.2-blue?style=for-the-badge&logo=shopping-cart)
 ![Node.js](https://img.shields.io/badge/Node.js-20+-339933?style=for-the-badge&logo=node.js&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-5.7%2B-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 ![Mobile Friendly](https://img.shields.io/badge/Mobile-Friendly-orange?style=for-the-badge&logo=android)
+![Security](https://img.shields.io/badge/Security-JWT%20%2B%20Rate%20Limit-red?style=for-the-badge)
 
 **Point of Sale berbasis Web** — ringan, cepat, dan bisa dipakai dari HP maupun komputer.  
 Dibangun dengan Node.js + MySQL, tanpa framework berat.
@@ -41,7 +42,7 @@ Dibangun dengan Node.js + MySQL, tanpa framework berat.
 ### 🖨️ Cetak & Unduh Struk
 - Mendukung printer thermal **58mm** dan **80mm**
 - Cetak langsung dari browser, tanpa driver tambahan
-- **Unduh PDF Struk** — download langsung tanpa dialog print, bisa dibagikan ke pelanggan via WhatsApp/email
+- **Unduh PDF Struk** — download langsung tanpa dialog print, bisa dibagikan via WhatsApp/email
 - Reprint struk lama dari menu Retur maupun Laporan
 - Footer struk bisa dikustomisasi
 - Struk menampilkan: logo toko, nama, alamat, jam operasional, diskon per item, diskon global, PPN, total
@@ -51,7 +52,7 @@ Dibangun dengan Node.js + MySQL, tanpa framework berat.
 - Input: barcode, nama, kategori, satuan, harga beli, harga jual, stok, **diskon produk (%)**
 - **Auto-generate barcode** urutan angka (001, 002, 003, dst.)
 - Kategori otomatis dinormalisasi ke UPPERCASE
-- Stok rendah (≤ batas warning) ditandai merah dan berkedip di katalog kasir
+- Stok rendah ditandai merah dan berkedip di katalog kasir
 - Filter/cari produk di tabel inventori
 - Badge diskon tampil di kolom harga jual
 
@@ -96,7 +97,7 @@ Dibangun dengan Node.js + MySQL, tanpa framework berat.
 - Jumlah transaksi hari ini
 - Total produk (+ info berapa yang sedang promo)
 - Total sisa stok (+ info berapa produk stok rendah)
-- **⚠️ Notifikasi alert stok hampir habis** — banner merah muncul otomatis di atas dashboard dengan daftar produk yang perlu direstok
+- **⚠️ Notifikasi alert stok hampir habis** — banner merah muncul otomatis dengan daftar produk yang perlu direstok
 - **Grafik Perbandingan** — bar chart minggu ini vs minggu lalu per hari, lengkap dengan ringkasan % naik/turun
 - Grafik tren omzet 7 hari terakhir
 - Grafik 5 barang terlaris
@@ -109,28 +110,33 @@ Setting dibagi menjadi sub-tab yang terorganisir:
 #### Profil Toko
 - Nama toko, alamat, nomor telepon
 - **Logo Toko** — upload gambar, tampil di header app dan struk cetak
-- **Jam Operasional** — atur per hari (Senin–Minggu), toggle buka/tutup per hari, preset cepat Sen–Jum / Sen–Sab / Setiap Hari
+- **Jam Operasional** — atur per hari (Senin–Minggu), preset cepat Sen–Jum / Sen–Sab / Setiap Hari
 - **Tema Warna Aplikasi** — 6 pilihan: Biru, Hijau, Ungu, Merah, Orange, Pink
 
 #### Printer & Struk
 - Ukuran kertas: 58mm atau 80mm
-- Pesan footer struk (misal: "Barang tidak dapat ditukar")
+- Pesan footer struk
 - Disimpan per perangkat/browser
 
 #### Transaksi
-- **Prefix Nomor Struk** — ganti `TRX` menjadi `INV`, `RARA`, atau kode lain. Preview langsung.
-- **Diskon Global** — persentase diskon default, toggle aktif/nonaktif, kasir bisa toggle on/off di keranjang
-- **Pajak / PPN** — aktif/nonaktif, persentase (default 11%), pilihan mode:
-  - **Exclude** — harga belum termasuk pajak, PPN ditambahkan ke total
-  - **Include** — harga sudah termasuk pajak, PPN diekstrak untuk pelaporan
+- **Prefix Nomor Struk** — ganti `TRX` menjadi kode custom. Preview langsung.
+- **Diskon Global** — persentase + toggle aktif/nonaktif
+- **Pajak / PPN** — aktif/nonaktif, persentase, mode Exclude atau Include
 
 #### Manajemen Akun
 - Tambah/edit/hapus akun kasir dan staff
 - Atur hak akses granular per menu
 
 #### Backup & Restore
-- **Backup** — unduh seluruh data (produk, transaksi, pengguna, pengaturan) sebagai file `.json`
-- **Restore** — upload file backup, semua data dipulihkan dengan konfirmasi
+- **Backup** — unduh seluruh data sebagai file `.json`
+- **Restore** — upload file backup, semua data dipulihkan
+
+### 🔐 Keamanan
+- **JWT Token** — setiap login menghasilkan token (HMAC-SHA256, expired 12 jam), dikirim di header setiap request API
+- **Rate Limiting Login** — maksimal 5 percobaan per IP per 15 menit, anti brute force
+- **API Key** — akses API via header `x-api-key` untuk integrasi eksternal, diset via environment variable
+- **Auto Logout Idle** — otomatis logout setelah 30 menit tidak ada aktivitas
+- **Auth Middleware** — semua endpoint `/api/` terlindungi, hanya `/api/login` dan `/api/setup` yang publik
 
 ### 📋 Daftar Pelanggan WA
 - Rekap semua pelanggan yang pernah menerima struk via WA
@@ -171,7 +177,6 @@ npm -v
 git clone https://github.com/monologstorycom-pixel/poin-of-sale-by-rsby.git
 cd poin-of-sale-by-rsby
 ```
-Atau download ZIP dari halaman GitHub → Extract ke folder.
 
 #### Langkah 4 — Install & Jalankan
 ```cmd
@@ -203,7 +208,6 @@ cd poin-of-sale-by-rsby
 npm install
 node server.js
 ```
-Buka browser → akses `http://localhost:3000` → isi form installer.
 
 **Supaya berjalan terus di background (pm2):**
 ```bash
@@ -213,15 +217,58 @@ pm2 startup
 pm2 save
 ```
 
+**Dengan environment variable (direkomendasikan untuk production):**
+```bash
+# Buat file .env
+echo "API_KEY=rahasiakamu123" > .env
+echo "JWT_SECRET=secretpanjangacak456" >> .env
+
+# Jalankan
+API_KEY=rahasiakamu123 JWT_SECRET=secretpanjangacak456 node server.js
+
+# Atau pakai dotenv (install dulu: npm install dotenv)
+# Tambah require('dotenv').config() di baris pertama server.js
+```
+
 ---
 
 ### 🐳 Instalasi via Docker
 
 ```bash
 docker build -t posweb .
-docker run -p 3000:3000 posweb
+docker run -p 3000:3000 -e API_KEY=rahasiakamu123 -e JWT_SECRET=secretpanjang posweb
 ```
-> Gunakan IP LAN atau hostname untuk koneksi MySQL — **bukan** `localhost`.
+
+---
+
+## 🔑 Konfigurasi Keamanan
+
+### JWT Token
+Token otomatis di-generate saat login, expired dalam **12 jam**. Tidak perlu konfigurasi tambahan — JWT secret di-generate otomatis setiap server restart. Untuk secret yang permanen:
+```bash
+JWT_SECRET=secretpanjangacakdanaman node server.js
+```
+
+### API Key (Opsional)
+Untuk akses API dari aplikasi eksternal tanpa login:
+```bash
+# Set saat jalankan server
+API_KEY=rahasiakamu123 node server.js
+```
+
+Gunakan di request:
+```bash
+curl -H "x-api-key: rahasiakamu123" http://localhost:3000/api/produk
+```
+
+### Rate Limiting
+Sudah aktif secara default — **5 percobaan login** per IP per **15 menit**. Tidak perlu konfigurasi.
+
+### Auto Logout
+Default **30 menit** idle. Bisa diubah di `app.js`:
+```js
+var IDLE_TIMEOUT_MS = 30 * 60 * 1000; // ganti angka 30 sesuai kebutuhan
+```
 
 ---
 
@@ -229,8 +276,9 @@ docker run -p 3000:3000 posweb
 
 ```
 posweb-rsby/
-├── server.js              # Backend Express + MySQL (semua API)
+├── server.js              # Backend Express + MySQL + Auth
 ├── config.json            # Konfigurasi koneksi DB (auto-dibuat saat setup)
+├── .env                   # Environment variables (opsional, tidak di-commit)
 ├── package.json
 ├── Dockerfile
 └── public/
@@ -245,10 +293,13 @@ posweb-rsby/
 
 ## 🔌 Endpoint API
 
+Semua endpoint `/api/` memerlukan header **`Authorization: Bearer <token>`** kecuali `/api/login` dan `/api/setup`.  
+Alternatif: gunakan header **`x-api-key: <key>`**.
+
 | Method | Endpoint | Keterangan |
 |---|---|---|
-| POST | `/api/setup` | Instalasi awal sistem |
-| POST | `/api/login` | Login user |
+| POST | `/api/setup` | Instalasi awal sistem *(publik)* |
+| POST | `/api/login` | Login user, return JWT token *(publik)* |
 | GET | `/api/produk` | Daftar semua produk |
 | POST | `/api/produk` | Tambah produk baru |
 | PUT | `/api/produk/:barcode` | Update produk |
@@ -281,6 +332,7 @@ posweb-rsby/
 | Komponen | Teknologi |
 |---|---|
 | **Backend** | Node.js, Express.js, mysql2 |
+| **Auth** | JWT custom (HMAC-SHA256, crypto bawaan Node.js) |
 | **Frontend** | Vanilla JavaScript (no framework) |
 | **CSS** | Tailwind CSS (CDN) |
 | **Chart** | Chart.js |
@@ -291,29 +343,33 @@ posweb-rsby/
 
 ---
 
-## 🔐 Keamanan
+## 🔐 Ringkasan Keamanan
 
-- Password disimpan as-is — **disarankan tambahkan hashing (bcrypt) di production**
-- Sistem hak akses berbasis permission string per user
-- XSS protection via `safeStr()` dan `safeAttr()` di frontend
-- Endpoint API tanpa token JWT — cocok untuk jaringan lokal/LAN
-- Untuk deployment publik, **tambahkan layer autentikasi token**
+| Fitur | Status | Keterangan |
+|---|---|---|
+| JWT Token | ✅ Aktif | Expired 12 jam, HMAC-SHA256 |
+| Rate Limiting | ✅ Aktif | 5x per IP per 15 menit |
+| API Key | ✅ Opsional | Set via `API_KEY` env var |
+| Auto Logout Idle | ✅ Aktif | 30 menit tidak ada aktivitas |
+| Auth Middleware | ✅ Aktif | Semua `/api/` terlindungi |
+| Password Hashing | ⏳ Roadmap | bcrypt (belum diimplementasi) |
+| HTTPS | ⚙️ Manual | Konfigurasi di reverse proxy (nginx) |
 
 ---
 
 ## 📝 Catatan Pengembangan
 
 - **Migrasi skema DB** berjalan otomatis saat server start — tidak perlu SQL manual
+- **JWT** diimplementasikan tanpa library eksternal menggunakan `crypto` bawaan Node.js
 - **Logo toko** disimpan sebagai base64 di kolom `MEDIUMTEXT` — endpoint terpisah agar response ringan
 - **Jam operasional** disimpan sebagai JSON di database
 - **Diskon per produk** disimpan di kolom `diskon` tabel `produk` (persen)
 - **PPN** mendukung dua mode: exclude (ditambahkan ke total) dan include (diekstrak dari harga)
 - **Prefix struk** menggantikan `TRX-` hardcode, dikonfigurasi per toko
-- **Unduh PDF struk** menggunakan jsPDF — ditulis langsung ke PDF tanpa render DOM, tidak ada efek samping ke tampilan halaman
+- **Unduh PDF struk** menggunakan jsPDF — ditulis langsung ke PDF tanpa render DOM
 - **Tema warna** disimpan di `localStorage` browser — berbeda per perangkat
-- **Pengaturan printer** (kertas, footer) disimpan di `localStorage` — berbeda per device
 - **Backup** mencakup semua tabel: produk, transaksi, detail_transaksi, users, pengaturan
-- **Dashboard** memuat data sekali dari API lalu kalkulasi semua metrik di frontend — efisien tanpa banyak request
+- **Dashboard** memuat data sekali dari API lalu kalkulasi semua metrik di frontend
 
 ---
 
@@ -339,7 +395,7 @@ MIT License — bebas digunakan, dimodifikasi, dan didistribusikan.
 
 **Dibuat dengan ❤️ oleh [Rsby](https://github.com/monologstorycom-pixel)**
 
-*POSweb v2.1 — Simple. Fast. Works.*
+*POSweb v2.2 — Simple. Fast. Secure.*
 
 🌐 **[Demo Live](http://server.rsby.cloud:3000/)** · user: `rsby` | pass: `1234`
 
