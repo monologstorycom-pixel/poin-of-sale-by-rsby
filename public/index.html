@@ -20,7 +20,6 @@
             --tema-light: #eff6ff;   --tema-border: #bfdbfe;
             --tema-text: #1d4ed8;    --tema-shadow: rgba(37,99,235,0.25);
         }
-        /* Elemen yang ikut tema */
         .tab-active { background-color: var(--tema-primary) !important; }
         #btnLoginAction { background-color: var(--tema-primary) !important; }
         #btnLoginAction:hover { background-color: var(--tema-hover) !important; }
@@ -33,7 +32,6 @@
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen overflow-hidden flex flex-col relative">
 
-    <!-- LOGIN -->
     <div id="pageLogin" class="flex items-center justify-center min-h-screen bg-slate-900 p-4 relative z-[100]">
         <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md text-center">
             <h1 class="text-3xl font-extrabold tracking-tight mb-2">POSweb <span class="text-blue-600">by Rsby</span></h1>
@@ -44,9 +42,7 @@
         </div>
     </div>
 
-    <!-- MAIN APP -->
     <div id="mainApp" class="hidden flex flex-col h-screen overflow-hidden">
-
         <header class="bg-white border-b p-3 md:p-4 no-print shrink-0 shadow-sm z-[60] relative">
             <div id="sidebarOverlay" onclick="toggleSidebar(true)" class="fixed inset-0 bg-slate-900/60 z-[70] hidden transition-opacity opacity-0 duration-300 md:hidden cursor-pointer" style="width:100vw;height:100vh;top:0;left:0;"></div>
             <div class="max-w-[1600px] mx-auto flex justify-between items-center gap-2">
@@ -74,7 +70,6 @@
                     <button id="btnNavKasir"     onclick="showTab('kasir')"     class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Kasir</button>
                     <button id="btnNavGudang"    onclick="showTab('gudang')"    class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Gudang</button>
                     <button id="btnNavLaporan"   onclick="showTab('laporan')"   class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Laporan</button>
-
                     <button id="btnNavSetting"   onclick="showTab('setting')"   class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Setting</button>
                     <div class="mt-auto md:hidden pt-4 border-t border-slate-100 w-full"></div>
                     <button id="btnNavPelanggan" onclick="showTab('pelanggan')" class="px-4 py-3 md:py-1.5 rounded-lg font-bold text-sm md:text-xs transition-all hidden uppercase text-left md:text-center w-full md:w-auto hover:bg-slate-50 cursor-pointer">Pelanggan WA</button>
@@ -86,10 +81,7 @@
         <main class="flex-grow overflow-hidden p-2 md:p-3 no-print">
             <div class="max-w-[1600px] mx-auto h-full">
 
-                <!-- DASHBOARD -->
                 <div id="tabDashboard" class="tab-content hidden h-full overflow-y-auto custom-scroll space-y-4 px-1 pb-10">
-
-                    <!-- Notifikasi Stok Hampir Habis -->
                     <div id="alertStokHabis" class="hidden">
                         <div class="bg-red-50 border border-red-200 rounded-2xl p-3">
                             <div class="flex items-center gap-2 mb-2">
@@ -100,78 +92,36 @@
                             <div id="alertStokList" class="flex flex-wrap gap-1.5"></div>
                         </div>
                     </div>
-
                     <h2 class="font-black text-xl tracking-tight text-slate-800 mt-2">Dashboard Statistik</h2>
-
-                    <!-- 4 Kartu Utama -->
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div class="bg-white p-3 md:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
-                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Omzet Hari Ini</span>
-                            <span id="dashOmzetHariIni" class="text-sm md:text-lg font-black text-blue-600 break-all leading-tight">Rp0</span>
-                            <span id="dashOmzetVsKemarin" class="text-[9px] font-bold mt-1"></span>
-                        </div>
-                        <div class="bg-white p-3 md:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
-                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Laba Hari Ini</span>
-                            <span id="dashLabaHariIni" class="text-sm md:text-lg font-black text-green-600 break-all leading-tight">Rp0</span>
-                            <span id="dashTrxHariIni" class="text-[9px] font-bold text-slate-400 mt-1"></span>
-                        </div>
-                        <div class="bg-white p-3 md:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
-                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Produk</span>
-                            <span id="dashTotalProduk" class="text-sm md:text-lg font-black text-slate-800">0</span>
-                            <span id="dashProdukDiskon" class="text-[9px] font-bold text-orange-500 mt-1"></span>
-                        </div>
-                        <div class="bg-white p-3 md:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
-                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Sisa Stok</span>
-                            <span id="dashTotalStok" class="text-sm md:text-lg font-black text-orange-500">0</span>
-                            <span id="dashStokRendah" class="text-[9px] font-bold text-red-500 mt-1"></span>
-                        </div>
+                        <div class="bg-white p-3 md:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col"><span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Omzet Hari Ini</span><span id="dashOmzetHariIni" class="text-sm md:text-lg font-black text-blue-600 break-all leading-tight">Rp0</span><span id="dashOmzetVsKemarin" class="text-[9px] font-bold mt-1"></span></div>
+                        <div class="bg-white p-3 md:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col"><span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Laba Hari Ini</span><span id="dashLabaHariIni" class="text-sm md:text-lg font-black text-green-600 break-all leading-tight">Rp0</span><span id="dashTrxHariIni" class="text-[9px] font-bold text-slate-400 mt-1"></span></div>
+                        <div class="bg-white p-3 md:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col"><span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Produk</span><span id="dashTotalProduk" class="text-sm md:text-lg font-black text-slate-800">0</span><span id="dashProdukDiskon" class="text-[9px] font-bold text-orange-500 mt-1"></span></div>
+                        <div class="bg-white p-3 md:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col"><span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Sisa Stok</span><span id="dashTotalStok" class="text-sm md:text-lg font-black text-orange-500">0</span><span id="dashStokRendah" class="text-[9px] font-bold text-red-500 mt-1"></span></div>
                     </div>
-
-                    <!-- Grafik Perbandingan Minggu Ini vs Minggu Lalu -->
                     <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest">Perbandingan Omzet</span>
-                            <div class="flex items-center gap-3 text-[9px] font-bold">
-                                <span class="flex items-center gap-1"><span class="inline-block w-3 h-1 rounded bg-blue-500"></span>Minggu Ini</span>
-                                <span class="flex items-center gap-1"><span class="inline-block w-3 h-1 rounded bg-slate-300"></span>Minggu Lalu</span>
-                            </div>
-                        </div>
-                        <div class="relative h-40 md:h-52"><canvas id="chartPerbandingan"></canvas></div>
-                        <div id="ringkasanPerbandingan" class="mt-2 text-[10px] text-slate-500 font-semibold text-center"></div>
+                        <div class="flex items-center justify-between mb-3"><span class="text-[10px] font-black text-slate-600 uppercase tracking-widest">Perbandingan Omzet</span><div class="flex items-center gap-3 text-[9px] font-bold"><span class="flex items-center gap-1"><span class="inline-block w-3 h-1 rounded bg-blue-500"></span>Minggu Ini</span><span class="flex items-center gap-1"><span class="inline-block w-3 h-1 rounded bg-slate-300"></span>Minggu Lalu</span></div></div>
+                        <div class="relative h-40 md:h-52"><canvas id="chartPerbandingan"></canvas></div><div id="ringkasanPerbandingan" class="mt-2 text-[10px] text-slate-500 font-semibold text-center"></div>
                     </div>
-
-                    <!-- Grafik Trend + Terlaris -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
-                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 shrink-0">Trend Omzet (7 Hari)</span>
-                            <div class="relative h-40 md:h-52"><canvas id="chartOmzet"></canvas></div>
-                        </div>
-                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
-                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 shrink-0">5 Barang Terlaris</span>
-                            <div class="relative h-40 md:h-52"><canvas id="chartTerlaris"></canvas></div>
-                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col"><span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 shrink-0">Trend Omzet (7 Hari)</span><div class="relative h-40 md:h-52"><canvas id="chartOmzet"></canvas></div></div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col"><span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 shrink-0">5 Barang Terlaris</span><div class="relative h-40 md:h-52"><canvas id="chartTerlaris"></canvas></div></div>
                     </div>
-
-                    <!-- Transaksi Terakhir Hari Ini -->
                     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                        <div class="px-4 py-3 border-b bg-slate-50 flex items-center justify-between">
-                            <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest">Transaksi Terakhir Hari Ini</span>
-                            <span id="dashJmlTrx" class="text-[9px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">0 transaksi</span>
-                        </div>
-                        <div id="dashTrxTerakhir" class="divide-y">
-                            <div class="px-4 py-6 text-center text-slate-300 text-xs font-bold italic">Belum ada transaksi hari ini</div>
-                        </div>
+                        <div class="px-4 py-3 border-b bg-slate-50 flex items-center justify-between"><span class="text-[10px] font-black text-slate-600 uppercase tracking-widest">Transaksi Terakhir Hari Ini</span><span id="dashJmlTrx" class="text-[9px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">0 transaksi</span></div>
+                        <div id="dashTrxTerakhir" class="divide-y"><div class="px-4 py-6 text-center text-slate-300 text-xs font-bold italic">Belum ada transaksi hari ini</div></div>
                     </div>
-
                 </div>
 
-                <!-- KASIR -->
                 <div id="tabKasir" class="tab-content hidden h-full flex flex-col md:flex-row gap-3 overflow-y-auto md:overflow-hidden custom-scroll pb-10 md:pb-0">
                     <div class="order-1 flex flex-col gap-2 w-full md:w-3/5 h-[65vh] min-h-[400px] md:min-h-0 md:h-full shrink-0 md:shrink">
                         <div class="bg-white p-1.5 rounded-xl border shadow-sm flex gap-2 shrink-0">
                             <input type="text" id="scanBarcode" placeholder="Scan Barcode / Kode..." inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="go" class="flex-grow p-2.5 bg-slate-50 rounded-lg border border-slate-200 font-bold text-sm focus:ring-2 focus:ring-blue-500 outline-none transition" onkeydown="handleScan(event)">
                             <input type="text" id="cariKatalog" placeholder="Cari Nama..." class="w-1/3 p-2.5 rounded-lg border border-slate-200 outline-none text-xs focus:ring-2 focus:ring-blue-500" oninput="filterKatalog()">
                         </div>
+                        
+                        <div id="wrapAreaMeja" class="hidden overflow-x-auto custom-scroll pb-2 mb-2 px-1 gap-2 flex shrink-0"></div>
+
                         <div id="containerKategori" class="flex gap-2 overflow-x-auto custom-scroll pb-1 shrink-0 px-1"></div>
                         <div class="bg-white border border-slate-200 rounded-xl p-2 flex-grow overflow-hidden shadow-sm flex flex-col">
                             <div id="listKatalogKasir" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-2.5 overflow-y-auto custom-scroll pr-1"></div>
@@ -203,18 +153,20 @@
                                 <input type="text" id="uangBayar" placeholder="Nominal (Rp)" inputmode="numeric" pattern="[0-9]*" autocomplete="off" class="flex-grow bg-slate-800 p-3 md:p-2.5 rounded-xl md:rounded-lg font-bold text-base outline-none focus:ring-2 focus:ring-blue-500 text-blue-300 border border-slate-700 text-right transition-opacity" oninput="formatInputBayar(this)" onkeyup="hitungKembalian()">
                                 <button id="btnUangPas" onclick="setUangPas()" class="bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-white rounded-xl md:rounded-lg font-bold text-xs uppercase tracking-wider transition border border-slate-600 shadow-sm active:scale-95 shrink-0 px-3 min-w-[56px]">Pas</button>
                             </div>
-                            <div class="flex gap-3 md:gap-2 items-stretch">
+                            <div class="flex gap-3 md:gap-2 items-stretch" id="areaTombolBayar">
                                 <div class="bg-slate-800/80 border border-slate-700 rounded-xl md:rounded-lg flex flex-col justify-center px-3 py-2 md:py-1.5 w-1/3 shrink-0">
                                     <span class="text-[9px] md:text-[8px] font-bold text-slate-400 uppercase mb-0.5 tracking-wider">Kembali</span>
                                     <span id="uangKembalian" class="font-black text-base md:text-sm text-green-400 truncate">Rp0</span>
                                 </div>
-                                <button onclick="prosesBayar()" class="flex-grow bg-blue-600 py-3 md:py-2 rounded-xl md:rounded-lg font-black text-base md:text-sm hover:bg-blue-500 transition-all active:scale-95 shadow-md shadow-blue-900/50 uppercase tracking-widest">Selesaikan</button>
+                                <button onclick="prosesBayar()" id="btnProsesSelesai" class="flex-grow bg-blue-600 py-3 md:py-2 rounded-xl md:rounded-lg font-black text-base md:text-sm hover:bg-blue-500 transition-all active:scale-95 shadow-md shadow-blue-900/50 uppercase tracking-widest">Selesaikan</button>
+                            </div>
+                            <div class="flex gap-2 items-stretch hidden mt-2" id="areaTombolMeja">
+                                <button onclick="simpanPesananMeja()" class="flex-grow bg-orange-500 py-3 md:py-2 rounded-xl md:rounded-lg font-black text-sm hover:bg-orange-400 text-white transition-all active:scale-95 shadow-md uppercase">Simpan & Cetak Dapur</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- GUDANG -->
                 <div id="tabGudang" class="tab-content hidden h-full overflow-y-auto custom-scroll space-y-4">
                     <div class="bg-white p-5 rounded-2xl border shadow-sm h-fit">
                         <h2 class="font-black text-xl mb-4">Master Barang</h2>
@@ -251,7 +203,6 @@
                     </div>
                 </div>
 
-                <!-- LAPORAN -->
                 <div id="tabLaporan" class="tab-content hidden h-full overflow-y-auto custom-scroll space-y-4">
                     <div class="flex flex-wrap gap-2 items-center">
                         <button id="btnLapHarian"  onclick="renderLaporan('harian')"  class="btn-filter-lap px-4 py-2.5 bg-green-600 text-white  font-bold rounded-lg text-xs transition uppercase shadow-sm">Pilih Tanggal</button>
@@ -265,7 +216,6 @@
                         <button onclick="cetakLaporanPDF()" class="bg-slate-900 text-white font-bold px-4 py-2.5 rounded-lg text-xs transition ml-auto uppercase shadow-md hover:bg-black">Cetak PDF</button>
                     </div>
                     <div class="text-center font-black text-slate-800 text-sm uppercase tracking-widest" id="teksFilterLaporan">Memuat Laporan...</div>
-                    <!-- Grid kartu: 3 kolom default, jadi 2x2 kalau PPN aktif -->
                     <div id="gridKartuLaporan" class="grid grid-cols-3 md:grid-cols-3 gap-2 md:gap-3">
                         <div class="bg-blue-600 p-3 md:p-4 rounded-2xl text-white shadow-sm text-center flex flex-col justify-center min-h-[72px]">
                             <p class="text-[9px] font-bold opacity-70 uppercase tracking-widest mb-1">Omzet</p>
@@ -295,10 +245,6 @@
                     </div>
                 </div>
 
-                <!-- TAB RETUR -->
-
-
-                <!-- PELANGGAN WA -->
                 <div id="tabPelanggan" class="tab-content hidden h-full overflow-y-auto custom-scroll space-y-4 pb-10">
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 flex-wrap">
                         <h2 class="font-black text-xl tracking-tight text-slate-800">Daftar Pelanggan WA</h2>
@@ -321,16 +267,13 @@
                     </div>
                 </div>
 
-                <!-- SETTING -->
                 <div id="tabSetting" class="tab-content hidden h-full overflow-y-auto custom-scroll pb-10">
-
-                    <!-- Sub-tab nav Setting -->
                     <div class="bg-white border-b sticky top-0 z-10 px-2 md:px-4">
                         <div class="flex gap-1 overflow-x-auto custom-scroll py-2">
-                            <button onclick="showSettingTab('toko')"    id="stab-toko"    class="setting-stab stab-active    shrink-0 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all">Profil Toko</button>
-                            <button onclick="showSettingTab('printer')"    id="stab-printer"    class="setting-stab stab-inactive shrink-0 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all">Printer &amp; Struk</button>
-                            <button onclick="showSettingTab('transaksi')" id="stab-transaksi" class="setting-stab stab-inactive shrink-0 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all">Transaksi</button>
-                            <button onclick="showSettingTab('akun')"    id="stab-akun"    id="stab-akun" class="setting-stab stab-inactive shrink-0 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all" style="display:none;" data-permission="pengguna">Manajemen Akun</button>
+                            <button onclick="showSettingTab('toko')"    id="stab-toko"    class="setting-stab stab-active    shrink-0 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all" style="display:none;">Profil Toko</button>
+                            <button onclick="showSettingTab('printer')"    id="stab-printer"    class="setting-stab stab-inactive shrink-0 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all" style="display:none;">Printer &amp; Struk</button>
+                            <button onclick="showSettingTab('transaksi')" id="stab-transaksi" class="setting-stab stab-inactive shrink-0 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all" style="display:none;">Transaksi</button>
+                            <button onclick="showSettingTab('akun')"    id="stab-akun"    class="setting-stab stab-inactive shrink-0 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all" style="display:none;" data-permission="pengguna">Manajemen Akun</button>
                             <button onclick="showSettingTab('backup')"  id="stab-backup"  class="setting-stab stab-inactive shrink-0 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all" style="display:none;" data-permission="backup">Backup &amp; Restore</button>
                             <button onclick="showSettingTab('retur-cetak')" id="stab-retur-cetak" class="setting-stab stab-inactive shrink-0 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all" style="display:none;" data-permission="retur-cetak">Retur &amp; Cetak Ulang</button>
                         </div>
@@ -338,10 +281,7 @@
 
                     <div class="max-w-2xl mx-auto px-2 md:px-4 pt-5">
 
-                        <!-- ── PROFIL TOKO ── -->
                         <div id="spanel-toko" class="setting-panel space-y-4">
-
-                            <!-- Logo Toko -->
                             <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
                                 <div class="px-6 py-4 border-b bg-slate-50">
                                     <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Logo Toko</h3>
@@ -349,7 +289,6 @@
                                 </div>
                                 <div class="p-6">
                                     <div class="flex items-center gap-5">
-                                        <!-- Preview -->
                                         <div class="shrink-0 relative">
                                             <div id="logoPreviewWrap" class="w-24 h-24 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden transition-all">
                                                 <img id="logoPreview" src="" alt="Logo" class="hidden w-full h-full object-contain p-1">
@@ -359,92 +298,50 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <!-- Controls -->
                                         <div class="flex-grow space-y-3">
                                             <label class="block cursor-pointer">
-                                                <div class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition active:scale-95 w-fit shadow-md">
-                                                    Pilih Gambar
-                                                </div>
+                                                <div class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition active:scale-95 w-fit shadow-md">Pilih Gambar</div>
                                                 <input type="file" id="inputLogoToko" accept="image/*" class="hidden" onchange="previewLogo(this)">
                                             </label>
-                                            <button onclick="simpanLogo()" id="btnSimpanLogo" disabled class="flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-black transition active:scale-95 w-fit shadow-md disabled:opacity-40 disabled:cursor-not-allowed">
-                                                Simpan Logo
-                                            </button>
-                                            <button onclick="hapusLogo()" id="btnHapusLogo" class="hidden flex items-center gap-2 bg-red-50 text-red-600 border border-red-200 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-red-100 transition active:scale-95 w-fit">
-                                                Hapus Logo
-                                            </button>
-                                            <p class="text-[10px] text-slate-400 font-semibold leading-relaxed">Format: JPG, PNG, WEBP. Maks 2MB.<br>Disarankan ukuran persegi, misal 200×200px.</p>
+                                            <button onclick="simpanLogo()" id="btnSimpanLogo" disabled class="flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-black transition active:scale-95 w-fit shadow-md disabled:opacity-40 disabled:cursor-not-allowed">Simpan Logo</button>
+                                            <button onclick="hapusLogo()" id="btnHapusLogo" class="hidden flex items-center gap-2 bg-red-50 text-red-600 border border-red-200 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-red-100 transition active:scale-95 w-fit">Hapus Logo</button>
+                                            <p class="text-[10px] text-slate-400 font-semibold leading-relaxed">Format: JPG, PNG, WEBP. Maks 2MB.</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Identitas Toko -->
                             <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
                                 <div class="px-6 py-4 border-b bg-slate-50">
                                     <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Identitas Toko</h3>
-                                    <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Tampil di header aplikasi dan pada struk cetak</p>
                                 </div>
                                 <div class="p-6 space-y-4">
-                                    <div>
-                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Nama Toko</label>
-                                        <input type="text" id="setNamaToko" placeholder="Misal: Toko Berkah Jaya" class="w-full p-3 bg-slate-50 border rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Alamat Lengkap</label>
-                                        <textarea id="setAlamat" placeholder="Jl. Contoh No. 1, Kecamatan, Kota" rows="2" class="w-full p-3 bg-slate-50 border rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition resize-none"></textarea>
-                                    </div>
-                                    <div>
-                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Nomor Telepon / WA</label>
-                                        <input type="text" id="setTelp" placeholder="08xxxxxxxxxx" class="w-full p-3 bg-slate-50 border rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition">
-                                    </div>
+                                    <div><label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Nama Toko</label><input type="text" id="setNamaToko" class="w-full p-3 bg-slate-50 border rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition"></div>
+                                    <div><label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Alamat Lengkap</label><textarea id="setAlamat" rows="2" class="w-full p-3 bg-slate-50 border rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition resize-none"></textarea></div>
+                                    <div><label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Nomor Telepon / WA</label><input type="text" id="setTelp" class="w-full p-3 bg-slate-50 border rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition"></div>
                                     <button onclick="simpanPengaturan()" class="w-full btn-tema text-white py-3.5 rounded-xl font-black text-sm uppercase tracking-widest shadow-md transition active:scale-95">Simpan Profil Toko</button>
                                 </div>
                             </div>
 
-                            <!-- Tema Warna Aplikasi -->
                             <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
                                 <div class="px-6 py-4 border-b bg-slate-50">
                                     <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Tema Warna Aplikasi</h3>
-                                    <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Pilih warna aksen sesuai brand toko — tersimpan di browser ini</p>
                                 </div>
                                 <div class="p-6">
                                     <div class="grid grid-cols-3 gap-3">
-                                        <button onclick="applyTema('biru')"   data-tema="biru"   class="tema-btn flex flex-col items-center gap-2 p-3 rounded-xl border hover:border-slate-400 transition active:scale-95">
-                                            <div class="w-8 h-8 rounded-full bg-blue-600 shadow-md"></div>
-                                            <span class="text-[10px] font-black text-slate-600 uppercase">Biru</span>
-                                        </button>
-                                        <button onclick="applyTema('hijau')"  data-tema="hijau"  class="tema-btn flex flex-col items-center gap-2 p-3 rounded-xl border hover:border-slate-400 transition active:scale-95">
-                                            <div class="w-8 h-8 rounded-full bg-green-600 shadow-md"></div>
-                                            <span class="text-[10px] font-black text-slate-600 uppercase">Hijau</span>
-                                        </button>
-                                        <button onclick="applyTema('ungu')"   data-tema="ungu"   class="tema-btn flex flex-col items-center gap-2 p-3 rounded-xl border hover:border-slate-400 transition active:scale-95">
-                                            <div class="w-8 h-8 rounded-full bg-violet-600 shadow-md"></div>
-                                            <span class="text-[10px] font-black text-slate-600 uppercase">Ungu</span>
-                                        </button>
-                                        <button onclick="applyTema('merah')"  data-tema="merah"  class="tema-btn flex flex-col items-center gap-2 p-3 rounded-xl border hover:border-slate-400 transition active:scale-95">
-                                            <div class="w-8 h-8 rounded-full bg-red-600 shadow-md"></div>
-                                            <span class="text-[10px] font-black text-slate-600 uppercase">Merah</span>
-                                        </button>
-                                        <button onclick="applyTema('orange')" data-tema="orange" class="tema-btn flex flex-col items-center gap-2 p-3 rounded-xl border hover:border-slate-400 transition active:scale-95">
-                                            <div class="w-8 h-8 rounded-full bg-orange-500 shadow-md"></div>
-                                            <span class="text-[10px] font-black text-slate-600 uppercase">Orange</span>
-                                        </button>
-                                        <button onclick="applyTema('pink')"   data-tema="pink"   class="tema-btn flex flex-col items-center gap-2 p-3 rounded-xl border hover:border-slate-400 transition active:scale-95">
-                                            <div class="w-8 h-8 rounded-full bg-pink-600 shadow-md"></div>
-                                            <span class="text-[10px] font-black text-slate-600 uppercase">Pink</span>
-                                        </button>
+                                        <button onclick="applyTema('biru')" data-tema="biru" class="tema-btn flex flex-col items-center gap-2 p-3 rounded-xl border hover:border-slate-400 transition active:scale-95"><div class="w-8 h-8 rounded-full bg-blue-600 shadow-md"></div><span class="text-[10px] font-black text-slate-600 uppercase">Biru</span></button>
+                                        <button onclick="applyTema('hijau')" data-tema="hijau" class="tema-btn flex flex-col items-center gap-2 p-3 rounded-xl border hover:border-slate-400 transition active:scale-95"><div class="w-8 h-8 rounded-full bg-green-600 shadow-md"></div><span class="text-[10px] font-black text-slate-600 uppercase">Hijau</span></button>
+                                        <button onclick="applyTema('ungu')" data-tema="ungu" class="tema-btn flex flex-col items-center gap-2 p-3 rounded-xl border hover:border-slate-400 transition active:scale-95"><div class="w-8 h-8 rounded-full bg-violet-600 shadow-md"></div><span class="text-[10px] font-black text-slate-600 uppercase">Ungu</span></button>
+                                        <button onclick="applyTema('merah')" data-tema="merah" class="tema-btn flex flex-col items-center gap-2 p-3 rounded-xl border hover:border-slate-400 transition active:scale-95"><div class="w-8 h-8 rounded-full bg-red-600 shadow-md"></div><span class="text-[10px] font-black text-slate-600 uppercase">Merah</span></button>
+                                        <button onclick="applyTema('orange')" data-tema="orange" class="tema-btn flex flex-col items-center gap-2 p-3 rounded-xl border hover:border-slate-400 transition active:scale-95"><div class="w-8 h-8 rounded-full bg-orange-500 shadow-md"></div><span class="text-[10px] font-black text-slate-600 uppercase">Orange</span></button>
+                                        <button onclick="applyTema('pink')" data-tema="pink" class="tema-btn flex flex-col items-center gap-2 p-3 rounded-xl border hover:border-slate-400 transition active:scale-95"><div class="w-8 h-8 rounded-full bg-pink-600 shadow-md"></div><span class="text-[10px] font-black text-slate-600 uppercase">Pink</span></button>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Jam Operasional — tetap di dalam spanel-toko -->
                             <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
                                 <div class="px-6 py-4 border-b bg-slate-50 flex items-center justify-between">
-                                    <div>
-                                        <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Jam Operasional</h3>
-                                        <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Tampil di bawah alamat pada struk cetak</p>
-                                    </div>
+                                    <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Jam Operasional</h3>
                                     <label class="flex items-center gap-2 cursor-pointer">
                                         <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Aktif</span>
                                         <div class="relative">
@@ -466,97 +363,83 @@
                                     </div>
                                     <button onclick="simpanJamOperasional()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-black transition active:scale-95 shadow-md mt-2">Simpan Jam Operasional</button>
                                 </div>
-                                <div id="jamNonaktifInfo" class="px-6 py-4 text-[11px] text-slate-400 font-semibold">
-                                    Aktifkan toggle di atas untuk mengatur jam operasional toko.
-                                </div>
+                                <div id="jamNonaktifInfo" class="px-6 py-4 text-[11px] text-slate-400 font-semibold">Aktifkan toggle di atas untuk mengatur jam operasional toko.</div>
                             </div>
-
                         </div>
 
-                        <!-- ── TRANSAKSI ── -->
                         <div id="spanel-transaksi" class="setting-panel space-y-4 hidden">
-
-                            <!-- Prefix Struk -->
                             <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
-                                <div class="px-6 py-4 border-b bg-slate-50">
-                                    <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Prefix Nomor Struk</h3>
-                                    <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Awalan nomor struk sesuai nama atau kode toko</p>
-                                </div>
+                                <div class="px-6 py-4 border-b bg-slate-50"><h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Prefix Nomor Struk</h3></div>
                                 <div class="p-6 space-y-3">
                                     <div>
                                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Prefix</label>
                                         <div class="flex items-center gap-3">
-                                            <input type="text" id="setPrefixStruk" value="TRX" maxlength="10" placeholder="TRX"
-                                                class="w-36 p-3 bg-slate-50 border rounded-xl font-black text-base outline-none focus:ring-2 focus:ring-blue-500 transition uppercase tracking-widest">
-                                            <div class="text-slate-400 font-mono text-sm">
-                                                <span class="font-black text-slate-600" id="previewPrefix">TRX</span>
-                                                <span>-1748293847261</span>
-                                            </div>
+                                            <input type="text" id="setPrefixStruk" value="TRX" maxlength="10" class="w-36 p-3 bg-slate-50 border rounded-xl font-black text-base outline-none focus:ring-2 focus:ring-blue-500 transition uppercase tracking-widest">
+                                            <div class="text-slate-400 font-mono text-sm"><span class="font-black text-slate-600" id="previewPrefix">TRX</span><span>-1748293847261</span></div>
                                         </div>
-                                        <p class="text-[10px] text-slate-400 font-semibold mt-1.5">Contoh: <span class="font-black text-slate-600">INV</span>, <span class="font-black text-slate-600">RARA</span>, <span class="font-black text-slate-600">STRUK</span>. Maks 10 karakter huruf/angka.</p>
                                     </div>
                                     <button onclick="simpanPengaturanTransaksi()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-black text-sm uppercase tracking-widest shadow-md hover:bg-black transition active:scale-95">Simpan Prefix</button>
                                 </div>
                             </div>
 
-                            <!-- Diskon Global -->
-                            <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+                            <div class="bg-white rounded-2xl border shadow-sm overflow-hidden mt-4">
                                 <div class="px-6 py-4 border-b bg-slate-50 flex items-center justify-between">
                                     <div>
-                                        <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Diskon Global</h3>
-                                        <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Potongan harga otomatis untuk semua transaksi</p>
+                                        <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Fitur Meja (Dine In)</h3>
+                                        <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Sistem bayar di akhir, simpan pesanan, & print dapur</p>
                                     </div>
                                     <label class="flex items-center gap-2 cursor-pointer shrink-0">
-                                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Aktif Default</span>
+                                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Aktif</span>
                                         <div class="relative">
-                                            <input type="checkbox" id="setDiskonGlobalAktif" class="sr-only peer">
+                                            <input type="checkbox" id="setMejaAktif" class="sr-only peer" onchange="toggleSettingMeja()">
                                             <div class="w-9 h-5 bg-slate-200 peer-checked:bg-blue-600 rounded-full transition-colors"></div>
                                             <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
                                         </div>
+                                    </label>
+                                </div>
+                                <div class="p-6 space-y-3" id="areaSettingJumlahMeja" style="display:none;">
+                                    <div>
+                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Jumlah Meja</label>
+                                        <input type="number" id="setJumlahMeja" value="20" min="1" max="100" class="w-36 p-3 bg-slate-50 border rounded-xl font-black text-base outline-none focus:ring-2 focus:ring-blue-500 transition">
+                                    </div>
+                                    <button onclick="simpanPengaturanTransaksi()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-black text-sm uppercase tracking-widest shadow-md hover:bg-black transition active:scale-95">Simpan Pengaturan Meja</button>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+                                <div class="px-6 py-4 border-b bg-slate-50 flex items-center justify-between">
+                                    <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Diskon Global</h3>
+                                    <label class="flex items-center gap-2 cursor-pointer shrink-0">
+                                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Aktif Default</span>
+                                        <div class="relative"><input type="checkbox" id="setDiskonGlobalAktif" class="sr-only peer"><div class="w-9 h-5 bg-slate-200 peer-checked:bg-blue-600 rounded-full transition-colors"></div><div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div></div>
                                     </label>
                                 </div>
                                 <div class="p-6 space-y-3">
                                     <div>
                                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Persentase Diskon</label>
                                         <div class="flex items-center gap-2">
-                                            <input type="number" id="setDiskonGlobal" value="0" min="0" max="100" placeholder="0"
-                                                class="w-28 p-3 bg-slate-50 border rounded-xl font-black text-lg outline-none focus:ring-2 focus:ring-blue-500 transition text-center">
+                                            <input type="number" id="setDiskonGlobal" value="0" min="0" max="100" class="w-28 p-3 bg-slate-50 border rounded-xl font-black text-lg outline-none focus:ring-2 focus:ring-blue-500 transition text-center">
                                             <span class="text-xl font-black text-slate-500">%</span>
-                                            <div id="previewDiskon" class="ml-2 text-[11px] text-slate-500 font-semibold leading-relaxed hidden">
-                                                Misal belanja <span class="font-black text-slate-700">Rp100.000</span> → potongan <span id="previewDiskonNominal" class="font-black text-green-600">Rp0</span>
-                                            </div>
+                                            <div id="previewDiskon" class="ml-2 text-[11px] text-slate-500 font-semibold leading-relaxed hidden">Misal belanja <span class="font-black text-slate-700">Rp100.000</span> → potongan <span id="previewDiskonNominal" class="font-black text-green-600">Rp0</span></div>
                                         </div>
-                                    </div>
-                                    <div class="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
-                                        <p class="text-[11px] text-blue-600 font-bold leading-relaxed">Kasir bisa toggle on/off diskon ini langsung dari keranjang tanpa perlu masuk Setting. Diskon juga tampil di struk pelanggan.</p>
                                     </div>
                                     <button onclick="simpanPengaturanTransaksi()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-black text-sm uppercase tracking-widest shadow-md hover:bg-black transition active:scale-95">Simpan Diskon Global</button>
                                 </div>
                             </div>
 
-
-                            <!-- PPN / Pajak -->
                             <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
                                 <div class="px-6 py-4 border-b bg-slate-50 flex items-center justify-between">
-                                    <div>
-                                        <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Pajak / PPN</h3>
-                                        <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Dihitung setelah diskon, ditampilkan di struk</p>
-                                    </div>
+                                    <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Pajak / PPN</h3>
                                     <label class="flex items-center gap-2 cursor-pointer shrink-0">
                                         <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Aktif</span>
-                                        <div class="relative">
-                                            <input type="checkbox" id="setPPNAktif" class="sr-only peer" onchange="updatePreviewPPN()">
-                                            <div class="w-9 h-5 bg-slate-200 peer-checked:bg-blue-600 rounded-full transition-colors"></div>
-                                            <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div>
-                                        </div>
+                                        <div class="relative"><input type="checkbox" id="setPPNAktif" class="sr-only peer" onchange="updatePreviewPPN()"><div class="w-9 h-5 bg-slate-200 peer-checked:bg-blue-600 rounded-full transition-colors"></div><div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4"></div></div>
                                     </label>
                                 </div>
                                 <div class="p-6 space-y-4">
                                     <div>
                                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Persentase PPN</label>
                                         <div class="flex items-center gap-3">
-                                            <input type="number" id="setPPNPct" value="11" min="0" max="100" placeholder="11" oninput="updatePreviewPPN()"
-                                                class="w-24 p-3 bg-slate-50 border rounded-xl font-black text-lg outline-none focus:ring-2 focus:ring-blue-500 transition text-center">
+                                            <input type="number" id="setPPNPct" value="11" min="0" max="100" oninput="updatePreviewPPN()" class="w-24 p-3 bg-slate-50 border rounded-xl font-black text-lg outline-none focus:ring-2 focus:ring-blue-500 transition text-center">
                                             <span class="text-xl font-black text-slate-500">%</span>
                                         </div>
                                     </div>
@@ -564,223 +447,125 @@
                                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Mode PPN</label>
                                         <div class="space-y-2">
                                             <label class="flex items-start gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition hover:border-slate-300 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                                                <input type="radio" name="ppnMode" id="ppnModeExclude" value="exclude" class="accent-blue-600 mt-0.5 shrink-0" checked onchange="updatePreviewPPN()">
-                                                <div>
-                                                    <div class="font-black text-sm text-slate-800">Harga Belum Termasuk Pajak <span class="text-[9px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-bold ml-1">EXCLUDE</span></div>
-                                                    <div class="text-[10px] text-slate-500 font-semibold mt-0.5 leading-relaxed">PPN ditambahkan di atas harga. Total bayar = Harga + Pajak.</div>
-                                                    <div class="text-[10px] text-blue-600 font-bold mt-1">Contoh: Rp100.000 + PPN 11% = <span class="font-black">Rp111.000</span></div>
-                                                </div>
+                                                <input type="radio" name="ppnMode" value="exclude" class="accent-blue-600 mt-0.5 shrink-0" checked onchange="updatePreviewPPN()">
+                                                <div><div class="font-black text-sm text-slate-800">Harga Belum Termasuk Pajak <span class="text-[9px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-bold ml-1">EXCLUDE</span></div></div>
                                             </label>
                                             <label class="flex items-start gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition hover:border-slate-300 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                                                <input type="radio" name="ppnMode" id="ppnModeInclude" value="include" class="accent-blue-600 mt-0.5 shrink-0" onchange="updatePreviewPPN()">
-                                                <div>
-                                                    <div class="font-black text-sm text-slate-800">Harga Sudah Termasuk Pajak <span class="text-[9px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-bold ml-1">INCLUDE</span></div>
-                                                    <div class="text-[10px] text-slate-500 font-semibold mt-0.5 leading-relaxed">Harga jual sudah include PPN. Total tidak berubah, pajak diekstrak untuk pelaporan.</div>
-                                                    <div class="text-[10px] text-blue-600 font-bold mt-1">Contoh: Rp111.000 sudah include PPN → pajak diekstrak <span class="font-black">Rp11.000</span></div>
-                                                </div>
+                                                <input type="radio" name="ppnMode" value="include" class="accent-blue-600 mt-0.5 shrink-0" onchange="updatePreviewPPN()">
+                                                <div><div class="font-black text-sm text-slate-800">Harga Sudah Termasuk Pajak <span class="text-[9px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-bold ml-1">INCLUDE</span></div></div>
                                             </label>
                                         </div>
-                                    </div>
-                                    <div id="boxPreviewPPN" class="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 hidden">
-                                        <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Preview</p>
-                                        <div id="isiPreviewPPN" class="text-[11px] text-blue-700 font-semibold leading-relaxed"></div>
-                                    </div>
-                                    <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-                                        <p class="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-1">Pengaruh ke Laporan</p>
-                                        <p class="text-[11px] text-amber-700 font-semibold leading-relaxed">PPN bukan pendapatan toko. Di laporan: <span class="font-black">Omzet</span> (total bayar) • <span class="font-black">Laba Bersih</span> (setelah pajak dikurangi) • <span class="font-black">Total PPN</span> yang harus disetor ke negara.</p>
                                     </div>
                                     <button onclick="simpanPengaturanTransaksi()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-black text-sm uppercase tracking-widest shadow-md hover:bg-black transition active:scale-95">Simpan Pengaturan PPN</button>
                                 </div>
                             </div>
-
                         </div>
 
-                        <!-- ── PRINTER & STRUK ── -->
                         <div id="spanel-printer" class="setting-panel space-y-4 hidden">
                             <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
-                                <div class="px-6 py-4 border-b bg-slate-50">
-                                    <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Pengaturan Printer</h3>
-                                    <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Disimpan di browser ini saja — berbeda per perangkat</p>
-                                </div>
+                                <div class="px-6 py-4 border-b bg-slate-50"><h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Pengaturan Printer</h3></div>
                                 <div class="p-6 space-y-4">
                                     <div>
                                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Ukuran Kertas</label>
                                         <div class="grid grid-cols-2 gap-3">
                                             <label class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition hover:border-slate-400 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                                                <input type="radio" name="ukuranKertas" value="58mm" class="accent-blue-600">
-                                                <div>
-                                                    <div class="font-black text-sm text-slate-800">58 mm</div>
-                                                    <div class="text-[10px] text-slate-400 font-semibold">Printer kecil</div>
-                                                </div>
+                                                <input type="radio" name="ukuranKertas" value="58mm" class="accent-blue-600"><div><div class="font-black text-sm text-slate-800">58 mm</div></div>
                                             </label>
                                             <label class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition hover:border-slate-400 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                                                <input type="radio" name="ukuranKertas" value="80mm" class="accent-blue-600">
-                                                <div>
-                                                    <div class="font-black text-sm text-slate-800">80 mm</div>
-                                                    <div class="text-[10px] text-slate-400 font-semibold">Printer lebar</div>
-                                                </div>
+                                                <input type="radio" name="ukuranKertas" value="80mm" class="accent-blue-600"><div><div class="font-black text-sm text-slate-800">80 mm</div></div>
                                             </label>
                                         </div>
-                                        <!-- Hidden select tetap ada untuk kompatibilitas app.js -->
-                                        <select id="setUkuranKertas" class="hidden">
-                                            <option value="58mm">58mm</option>
-                                            <option value="80mm">80mm</option>
-                                        </select>
+                                        <select id="setUkuranKertas" class="hidden"><option value="58mm">58mm</option><option value="80mm">80mm</option></select>
                                     </div>
                                     <div>
                                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Pesan Footer Struk</label>
-                                        <textarea id="setFooterStruk" placeholder="Misal: Barang yang sudah dibeli tidak dapat ditukar" rows="2" class="w-full p-3 bg-slate-50 border rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-slate-400 transition resize-none"></textarea>
+                                        <textarea id="setFooterStruk" rows="2" class="w-full p-3 bg-slate-50 border rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-slate-400 transition resize-none"></textarea>
                                     </div>
                                     <button onclick="simpanPengaturanPrinterBaru()" class="w-full bg-slate-900 text-white py-3.5 rounded-xl font-black text-sm uppercase tracking-widest shadow-md hover:bg-black transition active:scale-95">Simpan Pengaturan Printer</button>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- ── RETUR & CETAK ULANG ── -->
                         <div id="spanel-retur-cetak" class="setting-panel space-y-4 hidden">
-
-                            <!-- Cetak Ulang -->
                             <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
                                 <div class="px-6 py-4 border-b bg-slate-50 flex items-center justify-between">
-                                    <div>
-                                        <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Cetak Ulang Struk</h3>
-                                        <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Cetak ulang atau unduh PDF struk lama</p>
-                                    </div>
+                                    <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Cetak Ulang Struk</h3>
                                     <div class="flex gap-2 items-center">
                                         <input type="date" id="filterReprintTgl" class="border rounded-lg px-3 py-2 text-xs font-bold outline-none shadow-sm focus:ring-2 focus:ring-blue-400" onchange="loadTabReprint()">
                                         <button onclick="resetFilterReprint()" class="text-[10px] font-bold text-slate-400 hover:text-blue-600 uppercase tracking-widest transition px-2">Hari Ini</button>
                                     </div>
                                 </div>
-                                <div class="p-3 border-b bg-white">
-                                    <input type="text" id="cariStrukReprint" placeholder="Cari nomor struk atau nama kasir..." class="w-full p-2.5 text-sm rounded-lg border outline-none focus:ring-2 focus:ring-blue-400" oninput="filterTabReprint()">
-                                </div>
+                                <div class="p-3 border-b bg-white"><input type="text" id="cariStrukReprint" placeholder="Cari nomor struk..." class="w-full p-2.5 text-sm rounded-lg border outline-none focus:ring-2 focus:ring-blue-400" oninput="filterTabReprint()"></div>
                                 <div class="overflow-x-auto max-h-[50vh] custom-scroll">
                                     <table class="w-full text-left text-xs">
                                         <thead class="bg-slate-50 border-b sticky top-0 font-black text-slate-400 text-[10px] uppercase tracking-widest">
                                             <tr><th class="p-4">Struk / Kasir</th><th class="p-4 text-right">Total</th><th class="p-4 text-center">Aksi</th></tr>
                                         </thead>
-                                        <tbody id="listTabReprint" class="divide-y divide-slate-100">
-                                            <tr><td colspan="3" class="p-6 text-center text-slate-400 italic font-bold">Memuat...</td></tr>
-                                        </tbody>
+                                        <tbody id="listTabReprint" class="divide-y divide-slate-100"></tbody>
                                     </table>
                                 </div>
                             </div>
 
-                            <!-- Retur Transaksi -->
                             <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
                                 <div class="px-6 py-4 border-b bg-slate-50 flex items-center justify-between">
-                                    <div>
-                                        <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Retur Transaksi</h3>
-                                        <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Void transaksi dan kembalikan item ke keranjang</p>
-                                    </div>
+                                    <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Retur Transaksi</h3>
                                     <div class="flex gap-2 items-center">
                                         <input type="date" id="filterReturTgl" class="border rounded-lg px-3 py-2 text-xs font-bold outline-none shadow-sm focus:ring-2 focus:ring-orange-400" onchange="loadTabRetur()">
                                         <button onclick="resetFilterRetur()" class="text-[10px] font-bold text-slate-400 hover:text-orange-600 uppercase tracking-widest transition px-2">Hari Ini</button>
                                     </div>
                                 </div>
-                                <div class="p-3 border-b bg-white">
-                                    <input type="text" id="cariStrukRetur" placeholder="Cari nomor struk atau nama kasir..." class="w-full p-2.5 text-sm rounded-lg border outline-none focus:ring-2 focus:ring-orange-400" oninput="filterTabRetur()">
-                                </div>
+                                <div class="p-3 border-b bg-white"><input type="text" id="cariStrukRetur" placeholder="Cari nomor struk..." class="w-full p-2.5 text-sm rounded-lg border outline-none focus:ring-2 focus:ring-orange-400" oninput="filterTabRetur()"></div>
                                 <div class="overflow-x-auto max-h-[50vh] custom-scroll">
                                     <table class="w-full text-left text-xs">
                                         <thead class="bg-slate-50 border-b sticky top-0 font-black text-slate-400 text-[10px] uppercase tracking-widest">
                                             <tr><th class="p-4">Struk / Kasir</th><th class="p-4 text-right">Total</th><th class="p-4 text-center">Aksi</th></tr>
                                         </thead>
-                                        <tbody id="listTabRetur" class="divide-y divide-slate-100">
-                                            <tr><td colspan="3" class="p-6 text-center text-slate-400 italic font-bold">Memuat...</td></tr>
-                                        </tbody>
+                                        <tbody id="listTabRetur" class="divide-y divide-slate-100"></tbody>
                                     </table>
                                 </div>
                             </div>
-
                         </div>
 
-                        <!-- ── MANAJEMEN AKUN ── -->
-                        <div id="spanel-akun" id="sectionManajemenAkun" class="setting-panel space-y-4 hidden">
-                            <!-- Form tambah/edit akun -->
+                        <div id="spanel-akun" class="setting-panel space-y-4 hidden">
                             <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
-                                <div class="px-6 py-4 border-b bg-slate-50">
-                                    <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Tambah / Edit Akun</h3>
-                                    <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Atur akses kasir dan staff toko</p>
-                                </div>
+                                <div class="px-6 py-4 border-b bg-slate-50"><h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Tambah / Edit Akun</h3></div>
                                 <div class="p-6 space-y-4">
                                     <input type="hidden" id="addUserId">
                                     <div class="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Username</label>
-                                            <input type="text" id="addUserUsername" placeholder="Tanpa spasi" class="w-full p-3 border rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition bg-slate-50">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Password</label>
-                                            <input type="password" id="addUserPassword" placeholder="Isi untuk ganti" class="w-full p-3 border rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition bg-slate-50">
-                                        </div>
+                                        <div><label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Username</label><input type="text" id="addUserUsername" class="w-full p-3 border rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition bg-slate-50"></div>
+                                        <div><label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Password</label><input type="password" id="addUserPassword" class="w-full p-3 border rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition bg-slate-50"></div>
                                     </div>
-
-                                    <!-- Hak Akses -->
                                     <div>
                                         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Hak Akses Menu</label>
                                         <div class="grid grid-cols-2 gap-2">
-                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border rounded-xl cursor-pointer hover:bg-slate-100 transition text-xs font-bold opacity-60">
-                                                <input type="checkbox" value="kasir" class="akses-cb accent-blue-600" checked disabled> Kasir <span class="text-[9px] text-slate-400 font-semibold ml-auto">default</span>
-                                            </label>
-                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border rounded-xl cursor-pointer hover:bg-slate-100 transition text-xs font-bold">
-                                                <input type="checkbox" value="gudang" class="akses-cb accent-blue-600"> Gudang
-                                            </label>
-                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border rounded-xl cursor-pointer hover:bg-slate-100 transition text-xs font-bold">
-                                                <input type="checkbox" value="laporan" class="akses-cb accent-blue-600"> Laporan
-                                            </label>
-                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border rounded-xl cursor-pointer hover:bg-slate-100 transition text-xs font-bold">
-                                                <input type="checkbox" value="pengguna" class="akses-cb accent-blue-600"> Manajemen User
-                                            </label>
-                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border rounded-xl cursor-pointer hover:bg-slate-100 transition text-xs font-bold">
-                                                <input type="checkbox" value="setting" class="akses-cb accent-blue-600"> Setting
-                                            </label>
-                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-blue-50 border border-blue-200 rounded-xl cursor-pointer hover:bg-blue-100 transition text-xs font-bold">
-                                                <input type="checkbox" value="reprint" class="akses-cb accent-blue-600"> Cetak Ulang
-                                            </label>
-                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-orange-50 border border-orange-200 rounded-xl cursor-pointer hover:bg-orange-100 transition text-xs font-bold">
-                                                <input type="checkbox" value="retur" class="akses-cb accent-orange-500"> Retur Transaksi
-                                            </label>
-                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-emerald-50 border border-emerald-200 rounded-xl cursor-pointer hover:bg-emerald-100 transition text-xs font-bold">
-                                                <input type="checkbox" value="backup" class="akses-cb accent-emerald-600"> Backup DB
-                                            </label>
-                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-blue-50 border border-blue-200 rounded-xl cursor-pointer hover:bg-blue-100 transition text-xs font-bold">
-                                                <input type="checkbox" value="ppn" class="akses-cb accent-blue-600"> Kelola PPN
-                                            </label>
+                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border rounded-xl cursor-pointer hover:bg-slate-100 transition text-xs font-bold opacity-60"><input type="checkbox" value="kasir" class="akses-cb accent-blue-600" checked disabled> Kasir</label>
+                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border rounded-xl cursor-pointer hover:bg-slate-100 transition text-xs font-bold"><input type="checkbox" value="gudang" class="akses-cb accent-blue-600"> Gudang</label>
+                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border rounded-xl cursor-pointer hover:bg-slate-100 transition text-xs font-bold"><input type="checkbox" value="laporan" class="akses-cb accent-blue-600"> Laporan</label>
+                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border rounded-xl cursor-pointer hover:bg-slate-100 transition text-xs font-bold"><input type="checkbox" value="pengguna" class="akses-cb accent-blue-600"> Manajemen User</label>
+                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border rounded-xl cursor-pointer hover:bg-slate-100 transition text-xs font-bold"><input type="checkbox" value="setting" class="akses-cb accent-blue-600"> Setting</label>
+                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-blue-50 border border-blue-200 rounded-xl cursor-pointer hover:bg-blue-100 transition text-xs font-bold"><input type="checkbox" value="reprint" class="akses-cb accent-blue-600"> Cetak Ulang</label>
+                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-orange-50 border border-orange-200 rounded-xl cursor-pointer hover:bg-orange-100 transition text-xs font-bold"><input type="checkbox" value="retur" class="akses-cb accent-orange-500"> Retur Transaksi</label>
+                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-emerald-50 border border-emerald-200 rounded-xl cursor-pointer hover:bg-emerald-100 transition text-xs font-bold"><input type="checkbox" value="backup" class="akses-cb accent-emerald-600"> Backup DB</label>
+                                            <label class="flex items-center gap-2 px-3 py-2.5 bg-blue-50 border border-blue-200 rounded-xl cursor-pointer hover:bg-blue-100 transition text-xs font-bold"><input type="checkbox" value="ppn" class="akses-cb accent-blue-600"> Kelola PPN</label>
                                         </div>
                                     </div>
-
                                     <div class="flex gap-2 pt-1">
                                         <button id="btnSimpanUser" onclick="simpanUser()" class="flex-grow bg-blue-600 text-white py-3 rounded-xl font-black text-sm hover:bg-blue-700 transition shadow-md active:scale-95">Simpan Akun</button>
                                         <button id="btnBatalEditUser" onclick="batalEditUser()" class="hidden bg-red-50 text-red-600 px-5 py-3 rounded-xl font-bold text-sm border border-red-100 hover:bg-red-100 transition active:scale-95">Batal</button>
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Daftar akun -->
                             <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
-                                <div class="px-6 py-4 border-b bg-slate-50">
-                                    <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Daftar Akun</h3>
-                                </div>
+                                <div class="px-6 py-4 border-b bg-slate-50"><h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Daftar Akun</h3></div>
                                 <div class="overflow-x-auto">
-                                    <table class="w-full text-left text-xs">
-                                        <thead class="bg-white border-b font-black text-slate-400 text-[10px] uppercase tracking-widest">
-                                            <tr><th class="px-5 py-3">Username</th><th class="px-5 py-3">Akses</th><th class="px-5 py-3 text-center">Aksi</th></tr>
-                                        </thead>
-                                        <tbody id="listPengguna" class="divide-y divide-slate-100"></tbody>
-                                    </table>
+                                    <table class="w-full text-left text-xs"><thead class="bg-white border-b font-black text-slate-400 text-[10px] uppercase tracking-widest"><tr><th class="px-5 py-3">Username</th><th class="px-5 py-3">Akses</th><th class="px-5 py-3 text-center">Aksi</th></tr></thead><tbody id="listPengguna" class="divide-y divide-slate-100"></tbody></table>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- ── BACKUP & RESTORE ── -->
-                        <div id="spanel-backup" id="sectionBackupRestore" class="setting-panel space-y-4 hidden">
-                            <!-- Backup -->
+                        <div id="spanel-backup" class="setting-panel space-y-4 hidden">
                             <div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
-                                <div class="px-6 py-4 border-b bg-slate-50">
-                                    <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Backup Database</h3>
-                                    <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Unduh semua data: produk, transaksi, pengguna, pengaturan</p>
-                                </div>
+                                <div class="px-6 py-4 border-b bg-slate-50"><h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Backup Database</h3></div>
                                 <div class="p-6">
                                     <div class="flex items-center justify-between mb-4 bg-slate-50 border rounded-xl p-4">
                                         <div>
@@ -788,36 +573,20 @@
                                             <div id="infoBackupTerakhir" class="text-[10px] text-slate-400 font-semibold mt-0.5 hidden"></div>
                                             <div class="text-[10px] text-slate-400 font-semibold mt-0.5" id="infoBackupBelum">Belum pernah backup di perangkat ini</div>
                                         </div>
-                                        <button onclick="jalankanBackup()" id="btnBackup" class="shrink-0 bg-slate-900 text-white font-black text-[11px] uppercase tracking-widest py-2.5 px-5 rounded-xl hover:bg-black transition active:scale-95 shadow-md">
-                                            Unduh Backup
-                                        </button>
+                                        <button onclick="jalankanBackup()" id="btnBackup" class="shrink-0 bg-slate-900 text-white font-black text-[11px] uppercase tracking-widest py-2.5 px-5 rounded-xl hover:bg-black transition active:scale-95 shadow-md">Unduh Backup</button>
                                     </div>
-                                    <p class="text-[11px] text-slate-400 font-semibold leading-relaxed">Simpan file backup di tempat aman (Google Drive, email, flash drive). Backup rutin disarankan minimal seminggu sekali.</p>
                                 </div>
                             </div>
-
-                            <!-- Restore -->
                             <div class="bg-white rounded-2xl border border-red-100 shadow-sm overflow-hidden">
-                                <div class="px-6 py-4 border-b bg-red-50">
-                                    <h3 class="font-black text-sm text-red-700 uppercase tracking-widest">Restore Database</h3>
-                                    <p class="text-[10px] text-red-400 font-semibold mt-0.5">Semua data aktif akan diganti dengan data dari file backup</p>
-                                </div>
+                                <div class="px-6 py-4 border-b bg-red-50"><h3 class="font-black text-sm text-red-700 uppercase tracking-widest">Restore Database</h3></div>
                                 <div class="p-6 space-y-4">
                                     <label class="block w-full cursor-pointer">
                                         <div id="dropzoneRestore" class="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:border-red-300 hover:bg-red-50 transition">
-                                            <div class="text-2xl mb-2">📂</div>
-                                            <div id="labelFileRestore" class="text-xs font-black text-slate-500 uppercase tracking-widest">Klik untuk pilih file backup (.json)</div>
-                                            <div class="text-[10px] text-slate-400 font-semibold mt-1">atau drag &amp; drop file ke sini</div>
+                                            <div class="text-2xl mb-2">📂</div><div id="labelFileRestore" class="text-xs font-black text-slate-500 uppercase tracking-widest">Klik untuk pilih file backup (.json)</div>
                                         </div>
                                         <input type="file" id="inputFileRestore" accept=".json" class="hidden" onchange="handleFileRestore(this)">
                                     </label>
-                                    <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-                                        <p class="text-[11px] text-amber-700 font-bold leading-relaxed">Peringatan: Restore akan menghapus semua data saat ini secara permanen dan menggantinya dengan data dari file backup. Proses ini tidak dapat dibatalkan.</p>
-                                    </div>
-                                    <button onclick="jalankanRestore()" id="btnRestore" disabled
-                                        class="w-full bg-red-600 text-white font-black text-sm uppercase tracking-widest py-3.5 rounded-xl hover:bg-red-700 transition active:scale-95 shadow-md disabled:opacity-40 disabled:cursor-not-allowed">
-                                        Restore Sekarang
-                                    </button>
+                                    <button onclick="jalankanRestore()" id="btnRestore" disabled class="w-full bg-red-600 text-white font-black text-sm uppercase tracking-widest py-3.5 rounded-xl hover:bg-red-700 transition active:scale-95 shadow-md disabled:opacity-40 disabled:cursor-not-allowed">Restore Sekarang</button>
                                 </div>
                             </div>
                         </div>
@@ -829,56 +598,33 @@
         </main>
     </div>
 
-    <!-- MODAL ALERT -->
     <div id="modalAlert" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[1001] p-4 backdrop-blur-sm transition-opacity no-print opacity-0">
-        <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-xs text-center">
-            <div id="iconAlert" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"></div>
-            <h3 id="titleAlert" class="font-black text-xl mb-2 text-slate-800">Alert</h3>
-            <p  id="msgAlert"   class="text-sm text-slate-500 mb-6 font-medium leading-tight"></p>
-            <button onclick="closeAlert()" class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition active:scale-95 text-sm tracking-wide">Mengerti</button>
-        </div>
+        <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-xs text-center"><div id="iconAlert" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"></div><h3 id="titleAlert" class="font-black text-xl mb-2 text-slate-800">Alert</h3><p id="msgAlert" class="text-sm text-slate-500 mb-6 font-medium leading-tight"></p><button onclick="closeAlert()" class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition active:scale-95 text-sm tracking-wide">Mengerti</button></div>
     </div>
 
-    <!-- MODAL CONFIRM -->
     <div id="modalConfirm" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[1000] p-4 backdrop-blur-sm transition-opacity no-print opacity-0">
         <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm text-center">
-            <div class="w-16 h-16 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-            </div>
-            <h3 id="titleConfirm" class="font-black text-xl mb-2 text-slate-800">Konfirmasi</h3>
-            <p  id="msgConfirm"   class="text-sm text-slate-500 mb-6 font-medium leading-tight"></p>
-            <div class="flex gap-2">
-                <button onclick="closeConfirm()" class="w-1/2 bg-slate-100 text-slate-700 font-bold py-3 rounded-xl hover:bg-slate-200 transition text-sm">Batal</button>
-                <button id="btnConfirmOk"         class="w-1/2 bg-orange-500 text-white   font-bold py-3 rounded-xl hover:bg-orange-600 transition shadow-lg text-sm">Ya, Lanjutkan</button>
-            </div>
+            <h3 id="titleConfirm" class="font-black text-xl mb-2 text-slate-800">Konfirmasi</h3><p id="msgConfirm" class="text-sm text-slate-500 mb-6 font-medium leading-tight"></p>
+            <div class="flex gap-2"><button onclick="closeConfirm()" class="w-1/2 bg-slate-100 text-slate-700 font-bold py-3 rounded-xl hover:bg-slate-200 transition text-sm">Batal</button><button id="btnConfirmOk" class="w-1/2 bg-orange-500 text-white font-bold py-3 rounded-xl hover:bg-orange-600 transition shadow-lg text-sm">Ya, Lanjutkan</button></div>
         </div>
     </div>
 
-    <!-- MODAL SUKSES BAYAR -->
     <div id="modalSuksesBayar" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[999] p-4 backdrop-blur-sm no-print">
         <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-xs text-center">
-            <div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-3"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>
-            <h3 class="font-black text-xl mb-1">Transaksi Berhasil!</h3>
-            <p class="text-xs text-slate-500 mb-5 font-bold">Kembali: <span id="modalKembalian" class="font-black text-green-600 text-base">Rp0</span></p>
+            <h3 class="font-black text-xl mb-1">Transaksi Berhasil!</h3><p class="text-xs text-slate-500 mb-5 font-bold">Kembali: <span id="modalKembalian" class="font-black text-green-600 text-base">Rp0</span></p>
             <div class="space-y-2">
                 <button onclick="cetakStrukKasir()" class="w-full bg-slate-100 text-slate-700 font-bold py-3.5 rounded-xl text-sm hover:bg-slate-200 transition active:scale-95">Cetak Struk</button>
-                <button onclick="unduhStrukPDF()"   class="w-full bg-slate-800 text-white   font-bold py-3.5 rounded-xl text-sm hover:bg-slate-900 transition shadow-md active:scale-95">Unduh PDF Struk</button>
-                <button onclick="kirimWA()"          class="w-full bg-green-500 text-white   font-bold py-3.5 rounded-xl text-sm hover:bg-green-600 transition shadow-md active:scale-95">Kirim ke WhatsApp</button>
-                <button onclick="selesaiBayar()"     class="w-full bg-blue-600  text-white   font-black py-3.5 rounded-xl text-sm hover:bg-blue-700  transition mt-2 shadow-md active:scale-95">Selesai</button>
+                <button onclick="unduhStrukPDF()" class="w-full bg-slate-800 text-white font-bold py-3.5 rounded-xl text-sm hover:bg-slate-900 transition shadow-md active:scale-95">Unduh PDF Struk</button>
+                <button onclick="kirimWA()" class="w-full bg-green-500 text-white font-bold py-3.5 rounded-xl text-sm hover:bg-green-600 transition shadow-md active:scale-95">Kirim ke WhatsApp</button>
+                <button onclick="selesaiBayar()" class="w-full bg-blue-600 text-white font-black py-3.5 rounded-xl text-sm hover:bg-blue-700 transition mt-2 shadow-md active:scale-95">Selesai</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL STRUK LAPORAN -->
     <div id="modalStrukLaporan" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[999] p-4 backdrop-blur-sm no-print">
-        <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm relative">
-            <h3 class="font-black text-lg text-center mb-4 uppercase tracking-wider text-slate-800">Detail &amp; Retur</h3>
-            <div id="isiModalStruk" class="bg-slate-50 p-4 rounded-xl border border-slate-200 font-mono text-[10px] leading-relaxed max-h-[50vh] overflow-y-auto mb-4 text-slate-700"></div>
-            <div id="modalStrukActions" class="flex flex-col gap-2"></div>
-        </div>
+        <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm relative"><h3 class="font-black text-lg text-center mb-4 uppercase tracking-wider text-slate-800">Detail &amp; Retur</h3><div id="isiModalStruk" class="bg-slate-50 p-4 rounded-xl border border-slate-200 font-mono text-[10px] leading-relaxed max-h-[50vh] overflow-y-auto mb-4 text-slate-700"></div><div id="modalStrukActions" class="flex flex-col gap-2"></div></div>
     </div>
 
-    <!-- STRUK PRINT -->
     <div id="areaStruk" class="hidden max-w-[58mm] mx-auto text-[10px] font-mono p-1 text-black bg-white leading-tight">
         <center><img id="strukLogoPrint" src="" style="display:none;width:48px;height:48px;object-fit:contain;margin:0 auto 4px;" alt="Logo"><b id="strukNamaTokoPrint" class="text-[13px] uppercase"></b><br><span id="strukAlamatTelpPrint" class="text-[9px]"></span><hr class="border-dashed border-black my-1"><span id="strukJamPrint" class="text-[9px]" style="display:none;"></span></center>
         <div id="strukTanggal" class="text-center text-[9px] mb-1"></div>
@@ -886,39 +632,31 @@
         <table class="w-full mb-1"><tbody id="strukItem"></tbody></table>
         <div class="border-t border-dashed border-black mb-1"></div>
         <div class="border-t border-dashed border-black pt-2 font-bold space-y-1">
-            <div id="areaStrukDiskonProduk"></div>
-            <div id="areaStrukDiskonGlobal" class="hidden"><div class="flex justify-between text-[9px]"><span>SUBTOTAL</span><span id="strukSubtotalPrint"></span></div><div class="flex justify-between text-[9px] text-green-700"><span id="strukDiskonLabel">DISKON</span><span id="strukDiskonPrint"></span></div></div>
+            <div id="areaStrukDiskonProduk"></div><div id="areaStrukDiskonGlobal" class="hidden"><div class="flex justify-between text-[9px]"><span>SUBTOTAL</span><span id="strukSubtotalPrint"></span></div><div class="flex justify-between text-[9px] text-green-700"><span id="strukDiskonLabel">DISKON</span><span id="strukDiskonPrint"></span></div></div>
             <div class="flex justify-between"><span>TOTAL</span><span id="strukTotalPrint"></span></div>
             <div id="areaStrukPPN" class="hidden"><div class="flex justify-between text-[9px] text-blue-700"><span id="strukPPNLabel">PPN 11%</span><span id="strukPPNPrint"></span></div></div>
             <div class="flex justify-between"><span>METODE</span><span id="strukMetodePrint"></span></div>
-            <div id="areaStrukTunai"   class="flex justify-between"><span>TUNAI</span><span id="strukTunaiPrint"></span></div>
+            <div id="areaStrukTunai" class="flex justify-between"><span>TUNAI</span><span id="strukTunaiPrint"></span></div>
             <div id="areaStrukKembali" class="flex justify-between"><span>KEMBALI</span><span id="strukKembaliPrint"></span></div>
         </div>
         <center class="mt-4 pt-2 border-t border-dashed border-black italic text-[9px]">Kasir: <span id="strukNamaKasir"></span><br><span id="strukFooterText">Terima Kasih</span></center>
     </div>
+
+    <div id="areaStrukDapur" class="hidden max-w-[58mm] mx-auto text-[10px] font-mono p-1 text-black bg-white leading-tight mt-4">
+        <center><b class="text-[13px] uppercase">TIKET DAPUR</b><hr class="border-dashed border-black my-1"></center>
+        <div class="text-center text-[11px] font-black mb-1 bg-black text-white py-1 uppercase" id="strukDapurMeja"></div>
+        <div id="strukDapurTanggal" class="text-center text-[9px] mb-2 pb-1 border-b border-dashed border-black"></div>
+        <table class="w-full mb-1"><tbody id="strukDapurItem"></tbody></table>
+        <div class="border-t border-dashed border-black mb-1 pt-1 text-center text-[9px]">Mohon siapkan pesanan di atas.</div>
+    </div>
+
     <div id="areaPrintLaporan" class="hidden bg-white p-4"></div>
 
-    <!-- MODAL INPUT NOMOR WA -->
-    <div id="modalInputWA" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[1002] p-4 backdrop-blur-sm no-print transition-opacity duration-250">
+    <div id="modalInputWA" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[1002] p-4 backdrop-blur-sm no-print">
         <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-xs">
-            <div class="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-green-500" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                    <path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.558 4.115 1.528 5.84L.057 23.625a.75.75 0 00.918.918l5.786-1.471A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.885 0-3.65-.52-5.157-1.424l-.37-.22-3.835.975.993-3.733-.242-.385A9.953 9.953 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
-                </svg>
-            </div>
-            <h3 class="font-black text-lg text-center text-slate-800 mb-1">Kirim Struk via WhatsApp</h3>
-            <p class="text-xs text-slate-400 text-center mb-4 font-medium">Masukkan nomor HP / WA pelanggan</p>
-            <div class="relative mb-4">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">+62</span>
-                <input type="tel" id="inputNomorWA" placeholder="8xxx xxxx xxxx" inputmode="numeric" pattern="[0-9]*" enterkeyhint="send"
-                    class="w-full pl-12 pr-4 py-3.5 border-2 border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:border-green-400 transition text-sm"
-                    onkeydown="if(event.key==='Enter'){event.preventDefault();kirimWAKeNomor();}">
-            </div>
-            <div class="flex gap-2">
-                <button onclick="closeModalWA()" class="w-1/3 bg-slate-100 text-slate-600 font-bold py-3 rounded-xl hover:bg-slate-200 transition text-sm">Batal</button>
-                <button onclick="kirimWAKeNomor()" class="flex-grow bg-green-500 text-white font-bold py-3 rounded-xl hover:bg-green-600 active:scale-95 transition shadow-md text-sm">Kirim Sekarang</button>
-            </div>
+            <h3 class="font-black text-lg text-center text-slate-800 mb-1">Kirim Struk via WA</h3>
+            <div class="relative mb-4"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">+62</span><input type="tel" id="inputNomorWA" class="w-full pl-12 pr-4 py-3.5 border-2 border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:border-green-400 transition text-sm"></div>
+            <div class="flex gap-2"><button onclick="closeModalWA()" class="w-1/3 bg-slate-100 text-slate-600 font-bold py-3 rounded-xl">Batal</button><button onclick="kirimWAKeNomor()" class="flex-grow bg-green-500 text-white font-bold py-3 rounded-xl">Kirim</button></div>
         </div>
     </div>
 
